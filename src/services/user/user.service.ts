@@ -117,7 +117,7 @@ export class UserService {
         return await this.userService.find()
     }
 
-    async getUserByEmail (data: UserEmailDto): Promise<User | ApiResponse> {
+    async getUserByEmail (data: UserEmailDto): Promise<User> {
         const user = await this.userService.findOne({
             where: {
                 email: data.email
@@ -125,7 +125,17 @@ export class UserService {
         })
 
         if (!user) {
-            return new ApiResponse('error', -2002, 'User with that email not exist')
+            return null
+        }
+
+        return user;
+    }
+
+    async getUserById (id: number):Promise <User | null> {
+        const user = await this.userService.findOne(id);
+
+        if (!user) {
+            return null;
         }
 
         return user;

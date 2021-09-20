@@ -11,7 +11,6 @@ import { EditAdministratorDto } from "dto/administrator/edit.administrator.dto";
 import { DeleteAdministratorDto } from "dto/administrator/delete.administrator.dto";
 import { UsernameAdministratorDto } from "dto/administrator/username.administrator.dto";
 
-/* eslint-disable prettier/prettier */
 export class AdministratorService {
     constructor(@InjectRepository(Administrator) private readonly administratorService: Repository<Administrator>) {}
 
@@ -84,15 +83,26 @@ export class AdministratorService {
         return await this.administratorService.find()
     }
 
-    async getAdminByUsername (data: UsernameAdministratorDto): Promise<Administrator | ApiResponse> {
-        const admin = await this.administratorService.findOne({
-            where: {
-                username: data.username
-            }
-        })
+    async getAdminByUsername (data: UsernameAdministratorDto): Promise<Administrator> {
+        
+            const admin = await this.administratorService.findOne({
+                where: {
+                    username: data.username
+                }
+            })
 
-        if (!admin) {
-            return new ApiResponse('error', -1002, 'Administrator with that username not exist')
+            if (!admin) {
+                return null;
+            }
+
+            return admin;
+    }
+
+    async getAdminById (id: number):Promise<Administrator> {
+        const admin = await this.administratorService.findOne(id)
+
+        if(!admin) {
+            return null;
         }
 
         return admin;

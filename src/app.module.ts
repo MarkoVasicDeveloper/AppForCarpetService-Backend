@@ -1,10 +1,12 @@
 /* eslint-disable prettier/prettier */
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Administrator } from 'entities/Administrator';
 import { RefreshToken } from 'entities/RefreshToken';
 import { User } from 'entities/User';
+import { AuthMiddleware } from './authMiddleware/auth.middleware';
 import { AdministratorController } from './controller/administrator/administrator.controller';
+import { AuthController } from './controller/auth/auth.controller';
 import { UserController } from './controller/user/user.controller';
 import { AdministratorService } from './services/administrator/administrator.service';
 import { UserService } from './services/user/user.service';
@@ -23,7 +25,11 @@ import { UserService } from './services/user/user.service';
       Administrator, User, RefreshToken
     ])
   ],
-  controllers: [AdministratorController, UserController],
+  controllers: [AdministratorController, UserController, AuthController],
   providers: [AdministratorService, UserService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).exclude('auth/*').forRoutes('api/*')
+  }
+}

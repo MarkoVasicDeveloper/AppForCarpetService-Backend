@@ -25,3 +25,9 @@ Route list
 
     - Get localhost:3000/api/user/getAllUser
         Get all user
+
+3. Authentication for administrator
+    - Post localhost:3000/api/auth/administrator
+
+4. Authentication for user
+    - Post localhost:3000/api/auth/user

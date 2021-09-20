@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-export class UsernameAdministratorDto {
+export class AuthAdministratorDto {
     username: string
     password: string
 }
