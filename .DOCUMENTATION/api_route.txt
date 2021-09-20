@@ -1,0 +1,27 @@
+Route list
+
+1. Administrator
+    - Post localhost:3000/api/administrator/add
+        Add new administrator
+
+    - Post localhost:3000/api/administrator/edit
+        Edit Administrator
+
+    -Get localhost:3000/api/administrator/allAdmin
+        Get all administrator
+
+    - Post localhost:3000/api/administrator/getAdminByUsername
+        Get administrator by username
+
+    - Delete localhost:3000/api/administrator/delete
+        Delete administrator with username
+
+2. User
+    - Post localhost:3000/api/user/addUser
+        Add user
+
+    - Post localhost:3000/api/user/editUser
+        Edit user
+
+    - Get localhost:3000/api/user/getAllUser
+        Get all user
