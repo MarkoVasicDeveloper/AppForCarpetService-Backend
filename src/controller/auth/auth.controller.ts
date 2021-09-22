@@ -1,17 +1,18 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable prefer-const */
 import { Body, Controller, Post, Req } from "@nestjs/common";
-import { ApiResponse } from "misc/api.restonse";
+import { ApiResponse } from "src/misc/api.restonse";
 import { AdministratorService } from "src/services/administrator/administrator.service";
 import * as crypto from 'crypto';
-import { LoginInfo } from "misc/login.info";
+import { LoginInfo } from "src/misc/login.info";
 import { JwtData } from "dto/jwt/jwt.dto";
 import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
-import { JwtSecret } from "misc/jwt.secret";
+import { JwtSecret } from "src/misc/jwt.secret";
 import { UsernameAdministratorDto } from "dto/administrator/username.administrator.dto";
 import { UserService } from "src/services/user/user.service";
 import { UserAuthDto } from "dto/user/user.auth.dto";
+import { JwtRefreshData } from "dto/jwt/jwt.refresh.dto";
 
 @Controller('auth')
 
@@ -50,10 +51,24 @@ export class AuthController {
         
         const token = jwt.sign(jwtData.toPlane(), JwtSecret);
 
+        const jwtRefreshData = new JwtRefreshData();
+        jwtRefreshData.Id = jwtData.Id;
+        jwtRefreshData.identity = jwtData.identity;
+        jwtRefreshData.expire = this.getDatePlus(60 * 60 * 24 * 31);
+        jwtRefreshData.ipAddress = jwtData.ipAddress;
+        jwtRefreshData.userAgent = jwtData.userAgent;
+        jwtRefreshData.role = jwtData.role;
+
+        const refreshToken = jwt.sign(jwtRefreshData.toPlane(), JwtSecret)
+
+        await this.userService.createToken(jwtData.Id, this.getDatabaseTime(this.getIsoFormat(jwtRefreshData.expire)) , refreshToken)
+
         return new LoginInfo(
             jwtData.Id,
             jwtData.identity,
-            token
+            token,
+            refreshToken,
+            this.getIsoFormat(jwtRefreshData.expire)
         )
     }
 
@@ -74,24 +89,47 @@ export class AuthController {
             return new ApiResponse('error', -2002, 'Password is incorect')
         }
 
-        let now = new Date()
-        now.setDate(now.getDate() + 14)
-        const expiredTimestamp = now.getTime() / 1000;
-
         const jwtData = new JwtData()
         jwtData.Id = user.userId
         jwtData.identity = user.email
-        jwtData.expire = expiredTimestamp
+        jwtData.expire = this.getDatePlus(60 * 5)
         jwtData.ipAddress = req.ip
         jwtData.userAgent = req.headers['user-agent']
         jwtData.role = "user"
         
         const token = jwt.sign(jwtData.toPlane(), JwtSecret);
 
+        const jwtRefreshData = new JwtRefreshData();
+        jwtRefreshData.Id = jwtData.Id;
+        jwtRefreshData.identity = jwtData.identity;
+        jwtRefreshData.expire = this.getDatePlus(60 * 60 * 24 * 31);
+        jwtRefreshData.ipAddress = jwtData.ipAddress;
+        jwtRefreshData.userAgent = jwtData.userAgent;
+        jwtRefreshData.role = jwtData.role;
+
+        const refreshToken = jwt.sign(jwtRefreshData.toPlane(), JwtSecret)
+
+        await this.userService.createToken(jwtData.Id, this.getDatabaseTime(this.getIsoFormat(jwtRefreshData.expire)) , refreshToken)
+        
         return new LoginInfo(
             jwtData.Id,
             jwtData.identity,
-            token
+            token,
+            refreshToken,
+            this.getIsoFormat(jwtRefreshData.expire)
         )
+    }
+    private getDatePlus (numberOfSeconds: number) {
+        return new Date().getTime() / 1000 + numberOfSeconds
+    }
+
+    private getIsoFormat (timestamp: number) {
+        const date = new Date();
+        date.setTime(timestamp * 1000)
+        return date.toISOString()
+    }
+
+    private getDatabaseTime (isoFormatTime: string) {
+        return isoFormatTime.substr(0 , 19).replace('T', ' ')
     }
 }

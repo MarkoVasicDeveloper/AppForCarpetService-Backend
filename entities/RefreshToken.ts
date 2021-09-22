@@ -1,5 +1,14 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+import { User } from "./User";
 
+@Index("fk_user{token_user_id", ["userId"], {})
 @Entity("refresh_token", { schema: "apiperionica" })
 export class RefreshToken {
   @PrimaryGeneratedColumn({
@@ -9,22 +18,28 @@ export class RefreshToken {
   })
   refreshTokenId: number;
 
-  @Column("varchar", { name: "identity", length: 50, default: () => "'0'" })
-  identity: string;
+  @Column("datetime", { name: "expire_at" })
+  expireAt: Date;
 
-  @Column("varchar", {
-    name: "password_hash",
-    length: 255,
-    default: () => "'0'",
-  })
-  passwordHash: string;
+  @Column("int", { name: "user_id", unsigned: true })
+  userId: number;
 
-  @Column("varchar", { name: "ip_address", length: 32, default: () => "'0'" })
-  ipAddress: string;
+  @Column("text", { name: "refresh_token" })
+  refreshToken: string;
 
   @Column("timestamp", {
-    name: "expire_at",
+    name: "created_at",
     default: () => "CURRENT_TIMESTAMP",
   })
-  expireAt: Date;
+  createdAt: Date;
+
+  @Column("tinyint", { name: "is_valid", unsigned: true, default: () => "'1'" })
+  isValid: number;
+
+  @ManyToOne(() => User, (user) => user.refreshTokens, {
+    onDelete: "RESTRICT",
+    onUpdate: "CASCADE",
+  })
+  @JoinColumn([{ name: "user_id", referencedColumnName: "userId" }])
+  user: User;
 }

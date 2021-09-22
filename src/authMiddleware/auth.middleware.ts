@@ -3,7 +3,7 @@ import { HttpException, HttpStatus, Injectable, NestMiddleware } from "@nestjs/c
 import { JwtData } from "dto/jwt/jwt.dto";
 import { NextFunction, Request } from "express";
 import * as jwt from 'jsonwebtoken';
-import { JwtSecret } from "misc/jwt.secret";
+import { JwtSecret } from "src/misc/jwt.secret";
 import { AdministratorService } from "src/services/administrator/administrator.service";
 import { UserService } from "src/services/user/user.service";
 
@@ -56,6 +56,10 @@ export class AuthMiddleware implements NestMiddleware {
                 throw new HttpException('Bad token found', HttpStatus.UNAUTHORIZED)
             }
         }
+
+        // Proveriti da li je token istekao
+
+        req.token = jwtDataObject;
 
         next();
     }

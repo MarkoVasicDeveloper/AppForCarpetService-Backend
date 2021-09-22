@@ -1,4 +1,11 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  Index,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+import { RefreshToken } from "./RefreshToken";
 
 @Index("email", ["email"], { unique: true })
 @Index("phone", ["phone"], { unique: true })
@@ -35,6 +42,9 @@ export class User {
   })
   phone: string;
 
-  @Column("varchar", { name: "password_hash", length: 50 })
+  @Column("varchar", { name: "password_hash", length: 255 })
   passwordHash: string;
+
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
+  refreshTokens: RefreshToken[];
 }

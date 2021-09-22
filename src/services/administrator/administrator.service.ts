@@ -4,7 +4,7 @@
 import { InjectRepository } from "@nestjs/typeorm";
 import { AddAdministratorDto } from "dto/administrator/add.administrator.dto";
 import { Administrator } from "entities/Administrator";
-import { ApiResponse } from "misc/api.restonse";
+import { ApiResponse } from "src/misc/api.restonse";
 import { Repository } from "typeorm";
 import * as crypto from 'crypto';
 import { EditAdministratorDto } from "dto/administrator/edit.administrator.dto";
