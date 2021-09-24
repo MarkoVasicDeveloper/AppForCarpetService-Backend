@@ -27,7 +27,22 @@ Route list
         Get all user
 
 3. Authentication for administrator
-    - Post localhost:3000/api/auth/administrator
+    - Post localhost:3000/auth/administrator
 
 4. Authentication for user
-    - Post localhost:3000/api/auth/user
+    - Post localhost:3000/auth/user
+
+5. Refresh token for administrator and user
+    - Post localhost:3000/auth/user/refresh
+    - Post localhost:3000/auth/administrator/refresh
+
+6. Clients
+    - Post localhost:3000/api/clients/addClient
+    - Post localhost:3000/api/clients/editClient/:id
+    - Get localhost:3000/api/clients/getAllClients
+    - Get localhost:3000/api/clients/getClientsById/:id
+    - Post localhost:3000/api/clients/getClientsByName
+    - Post localhost:3000/api/clients/getClientsBySurname
+    - Post localhost:3000/api/clients/getClientsByAddress
+    - Delete localhost:3000/api/clients/deleteClient/:id
+    - Delete localhost:3000/api/clients/deleteAllClient

@@ -18,9 +18,6 @@ export class RefreshToken {
   })
   refreshTokenId: number;
 
-  @Column("datetime", { name: "expire_at" })
-  expireAt: Date;
-
   @Column("int", { name: "user_id", unsigned: true })
   userId: number;
 
@@ -32,6 +29,9 @@ export class RefreshToken {
     default: () => "CURRENT_TIMESTAMP",
   })
   createdAt: Date;
+
+  @Column("datetime", { name: "expire_at" })
+  expireAt: Date;
 
   @Column("tinyint", { name: "is_valid", unsigned: true, default: () => "'1'" })
   isValid: number;

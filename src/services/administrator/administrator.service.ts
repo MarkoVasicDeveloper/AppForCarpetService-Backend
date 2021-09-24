@@ -10,9 +10,11 @@ import * as crypto from 'crypto';
 import { EditAdministratorDto } from "dto/administrator/edit.administrator.dto";
 import { DeleteAdministratorDto } from "dto/administrator/delete.administrator.dto";
 import { UsernameAdministratorDto } from "dto/administrator/username.administrator.dto";
+import { RefreshAdministratorToken } from "entities/RefreshAdministratorToken";
 
 export class AdministratorService {
-    constructor(@InjectRepository(Administrator) private readonly administratorService: Repository<Administrator>) {}
+    constructor(@InjectRepository(Administrator) private readonly administratorService: Repository<Administrator>,
+                @InjectRepository(RefreshAdministratorToken) private readonly refreshAdministratorToken: Repository<RefreshAdministratorToken>) {}
 
     async addAdministrator(data: AddAdministratorDto): Promise <Administrator | ApiResponse> {
 
@@ -106,5 +108,52 @@ export class AdministratorService {
         }
 
         return admin;
+    }
+
+    async createAdminToken (administratorId: number, expireAt: string, refreshAdminToken: string) {
+        const adminRefreshToken = new RefreshAdministratorToken();
+        adminRefreshToken.administratorId = administratorId;
+        adminRefreshToken.refreshAdministratorToken = refreshAdminToken;
+        adminRefreshToken.expireAt = expireAt as any;
+
+        return await this.refreshAdministratorToken.save(adminRefreshToken)
+    }
+
+    async getAdminToken (token: string): Promise<RefreshAdministratorToken> {
+        const admin = await this.refreshAdministratorToken.findOne({
+            refreshAdministratorToken: token
+        })
+
+        return admin;
+    }
+
+    async invalidateToken(token: string):Promise <RefreshAdministratorToken | ApiResponse> {
+        const adminToken = await this.refreshAdministratorToken.findOne({
+            refreshAdministratorToken: token
+        })
+
+        if (!adminToken) {
+            return new ApiResponse('error', -3001, 'Token not found')
+        }
+
+        adminToken.isValid = 0;
+
+        await this.refreshAdministratorToken.save(adminToken);
+
+        return await this.getAdminToken(token)
+    }
+
+    async invalidateAdminTokens (administratorId: number): Promise <(RefreshAdministratorToken | ApiResponse)[]> {
+        const adminTokens = await this.refreshAdministratorToken.find({
+            administratorId: administratorId
+        })
+
+        const results = []
+
+        for (const adminToken of adminTokens) {
+            results.push(this.invalidateToken(adminToken.refreshAdministratorToken))
+        }
+
+        return results;
     }
 }

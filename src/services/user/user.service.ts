@@ -153,14 +153,10 @@ export class UserService {
         return await this.refreshToken.save(userRefreshToken)
     }
 
-    async getUserToken (token: string): Promise<RefreshToken | ApiResponse> {
+    async getUserToken (token: string): Promise<RefreshToken> {
         const user = await this.refreshToken.findOne({
             refreshToken: token
         })
-
-        if (!user) {
-            return new ApiResponse('error', -3001, 'Token not found')
-        }
 
         return user;
     }

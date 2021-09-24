@@ -1,4 +1,11 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  Index,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+import { RefreshAdministratorToken } from "./RefreshAdministratorToken";
 
 @Index("username", ["username"], { unique: true })
 @Entity("administrator", { schema: "apiperionica" })
@@ -24,4 +31,10 @@ export class Administrator {
     default: () => "'0'",
   })
   passwordHash: string;
+
+  @OneToMany(
+    () => RefreshAdministratorToken,
+    (refreshAdministratorToken) => refreshAdministratorToken.administrator
+  )
+  refreshAdministratorTokens: RefreshAdministratorToken[];
 }
