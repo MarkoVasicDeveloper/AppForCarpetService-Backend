@@ -25,8 +25,8 @@ export class CarpetImages {
   })
   carpetReceptionId: number;
 
-  @Column("int", { name: "image_path", unsigned: true, default: () => "'0'" })
-  imagePath: number;
+  @Column("varchar", { name: "image_path", length: 255, default: () => "'0'" })
+  imagePath: string;
 
   @ManyToOne(
     () => CarpetReception,

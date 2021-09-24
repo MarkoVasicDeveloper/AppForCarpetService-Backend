@@ -11,12 +11,14 @@ import { User } from 'entities/User';
 import { AuthMiddleware } from './authMiddleware/auth.middleware';
 import { AdministratorController } from './controller/administrator/administrator.controller';
 import { AuthController } from './controller/auth/auth.controller';
+import { CarpetImagesController } from './controller/carpetImages/carpet.images.controller';
 import { CarpetReceprionController } from './controller/carpetReceptions/carpet.reception.controller';
 import { ClientsContoller } from './controller/clients/clients.controller';
 import { UserController } from './controller/user/user.controller';
 import { AdministratorService } from './services/administrator/administrator.service';
 import { CarpetReceptionsService } from './services/carpetReceprion/carpet.reception.service';
 import { ClientsService } from './services/clients/clients.service';
+import { ImagesService } from './services/images/images.service';
 import { UserService } from './services/user/user.service';
 
 @Module({
@@ -44,9 +46,16 @@ import { UserService } from './services/user/user.service';
       UserController,
       AuthController,
       ClientsContoller,
-      CarpetReceprionController
+      CarpetReceprionController,
+      CarpetImagesController
     ],
-  providers: [AdministratorService, UserService, ClientsService, CarpetReceptionsService],
+  providers: [
+    AdministratorService,
+    UserService,
+    ClientsService,
+    CarpetReceptionsService,
+    ImagesService
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

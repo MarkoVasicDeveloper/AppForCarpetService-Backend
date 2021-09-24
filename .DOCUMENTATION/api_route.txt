@@ -46,3 +46,7 @@ Route list
     - Post localhost:3000/api/clients/getClientsByAddress
     - Delete localhost:3000/api/clients/deleteClient/:id
     - Delete localhost:3000/api/clients/deleteAllClient
+
+7. Carpet reception
+    - Post localhost:3000/api/carpetReception/addReception
+    - Post localhost:3000/api/carpetReception/editReception
