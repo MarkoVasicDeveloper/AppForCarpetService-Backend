@@ -16,8 +16,6 @@ export class UserController {
     constructor(private readonly userService: UserService) {}
 
     @Post('addUser')
-    @SetMetadata('allow_to_roles', ['administrator', 'user'])
-    @UseGuards(RolleCheckerGard)
     async addUser (@Body() data: AddUserDto):Promise <User | ApiResponse> {
         return await this.userService.addUser(data)
     }

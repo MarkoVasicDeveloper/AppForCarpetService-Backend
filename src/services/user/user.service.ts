@@ -18,26 +18,28 @@ export class UserService {
 
     async addUser (data: AddUserDto): Promise <User | ApiResponse> {
 
-        try {
-            const passwordString = crypto.createHash('sha512')
-            passwordString.update(data.passwordHash)
-            const passwordStringHash = passwordString.digest('hex').toString().toUpperCase()
+       try {
+        const passwordString = crypto.createHash('sha512')
+        passwordString.update(data.password)
+        const passwordStringHash = passwordString.digest('hex').toString().toUpperCase()
 
-            const user = new User()
-            user.name = data.name
-            user.surname = data.surname
-            user.email = data.email
-            user.city = data.city
-            user.address = data.address
-            user.phone = data.phone
-            user.passwordHash = passwordStringHash
+        const user = new User()
+        user.name = data.name
+        user.surname = data.surname
+        user.email = data.email
+        user.city = data.city
+        user.address = data.address
+        user.phone = data.phone
+        user.passwordHash = passwordStringHash
 
-            const savedUser = await this.userService.save(user)
+        const savedUser = await this.userService.save(user)
 
-            return savedUser;
-        } catch (error) {
-            return new ApiResponse('error', -2001, 'Email is taken')
-        }
+        return savedUser;
+       } catch (error) {
+           return new ApiResponse('error', -10001, 'Email is taken')
+       }
+            
+       
     }
 
     async editUser (data: EditUserDto): Promise <User | ApiResponse> {

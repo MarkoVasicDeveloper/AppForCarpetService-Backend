@@ -15,7 +15,7 @@ export class CarpetReceptionsService {
     constructor(@InjectRepository(CarpetReception) private readonly carpetReception: Repository<CarpetReception>,
                 @InjectRepository(Clients) private readonly clientsService: Repository<Clients>) {}
 
-    async addCarpetReception (data: AddCarpetReceptionDto): Promise <Clients | ApiResponse> {
+    async addCarpetReception (data: AddCarpetReceptionDto, workerId: number): Promise <Clients | ApiResponse> {
         const client = await this.clientsService.findOne(data.clientsId)
 
         if (!client) {
@@ -27,6 +27,7 @@ export class CarpetReceptionsService {
         carpet.numberOfTracks = data.numberOfTracks;
         carpet.note = data.note;
         carpet.clientsId = client.clientsId;
+        carpet.workerId = workerId;
 
         await this.carpetReception.save(carpet) 
 
@@ -35,12 +36,14 @@ export class CarpetReceptionsService {
         })
     }
 
-    async editCarpetReception (data: EditCarpetReception): Promise <CarpetReception | ApiResponse> {
+    async editCarpetReception (data: EditCarpetReception, workerId: number): Promise <CarpetReception | ApiResponse> {
         const carpetReception = await this.carpetReception.findOne(data.carpetReceptionId)
 
         if (!carpetReception) {
             return new ApiResponse('error', -5001, 'Reception is not found')
         }
+
+        carpetReception.workerId = workerId
 
         if(data.numberOfCarpet) {
             carpetReception.numberOfCarpet = data.numberOfCarpet;

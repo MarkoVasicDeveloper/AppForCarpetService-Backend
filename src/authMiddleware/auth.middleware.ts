@@ -15,13 +15,19 @@ export class AuthMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: NextFunction) {
         
-        if(!req.headers['authorization']) {
+        if(!req.headers.authorization) {
             throw new HttpException('Header not exist', HttpStatus.UNAUTHORIZED)
         }
+        
+        const token = req.headers.authorization.split(' ')[1]
 
-        const token = req.headers['authorization'].split(' ')[1]
+        let jwtDataObject: JwtData;
 
-        const jwtDataObject: JwtData = jwt.verify(token, JwtSecret) as any;
+        try {
+            jwtDataObject = jwt.verify(token, JwtSecret) as any;
+        } catch (e) {
+            throw new HttpException('Bad token found', HttpStatus.UNAUTHORIZED);
+        }
 
         if (!jwtDataObject) {
             throw new HttpException('Token is incorect', HttpStatus.UNAUTHORIZED)

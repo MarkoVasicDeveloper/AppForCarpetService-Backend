@@ -8,7 +8,6 @@ import {
 import { RefreshToken } from "./RefreshToken";
 
 @Index("email", ["email"], { unique: true })
-@Index("phone", ["phone"], { unique: true })
 @Entity("user", { schema: "apiperionica" })
 export class User {
   @PrimaryGeneratedColumn({ type: "int", name: "user_id", unsigned: true })
@@ -34,12 +33,7 @@ export class User {
   @Column("varchar", { name: "address", length: 255, default: () => "'0'" })
   address: string;
 
-  @Column("varchar", {
-    name: "phone",
-    unique: true,
-    length: 50,
-    default: () => "'0'",
-  })
+  @Column("varchar", { name: "phone", length: 50, default: () => "'0'" })
   phone: string;
 
   @Column("varchar", { name: "password_hash", length: 255 })

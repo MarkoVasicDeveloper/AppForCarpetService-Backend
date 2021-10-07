@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 
-import { Body, Controller, Post, SetMetadata, UseGuards } from "@nestjs/common";
+import { Body, Controller, Param, Post, SetMetadata, UseGuards } from "@nestjs/common";
 import { AddCarpetReceptionDto } from "dto/CarpetReception/add.carpet.reception.dto";
 import { EditCarpetReception } from "dto/CarpetReception/edit.carpet.reception.dto";
 import { CarpetReception } from "entities/CarpetReception";
@@ -14,17 +14,17 @@ import { CarpetReceptionsService } from "src/services/carpetReceprion/carpet.rec
 export class CarpetReceprionController {
     constructor(private readonly carpetReceptionService: CarpetReceptionsService) { }
 
-    @Post('addReception')
+    @Post('addReception/:id')
     @UseGuards(RolleCheckerGard)
     @SetMetadata('allow_to_roles', ['user'])
-    async addReception(@Body() data: AddCarpetReceptionDto): Promise <Clients | ApiResponse> {
-        return await this.carpetReceptionService.addCarpetReception(data)
+    async addReception(@Body() data: AddCarpetReceptionDto, @Param('id') workerId: number): Promise <Clients | ApiResponse> {
+        return await this.carpetReceptionService.addCarpetReception(data, workerId)
     }
 
-    @Post('editReception')
+    @Post('editReception/:id')
     @UseGuards(RolleCheckerGard)
     @SetMetadata('allow_to_roles', ['user'])
-    async editCarpetReception (@Body() data: EditCarpetReception):Promise <CarpetReception | ApiResponse> {
-        return await this.carpetReceptionService.editCarpetReception(data)
+    async editCarpetReception (@Body() data: EditCarpetReception, @Param('id') workerId: number):Promise <CarpetReception | ApiResponse> {
+        return await this.carpetReceptionService.editCarpetReception(data, workerId)
     }
 }

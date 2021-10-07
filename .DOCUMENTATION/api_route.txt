@@ -16,6 +16,9 @@ Route list
     - Delete localhost:3000/api/administrator/delete
         Delete administrator with username
 
+    - Post localhost:3000/api/administrator/user/invalideRefreshTokens/:id
+        Invalide all tokens of user
+
 2. User
     - Post localhost:3000/api/user/addUser
         Add user
@@ -48,5 +51,12 @@ Route list
     - Delete localhost:3000/api/clients/deleteAllClient
 
 7. Carpet reception
-    - Post localhost:3000/api/carpetReception/addReception
-    - Post localhost:3000/api/carpetReception/editReception
+    - Post localhost:3000/api/carpetReception/addReception/:id
+    - Post localhost:3000/api/carpetReception/editReception/:id
+
+8. Images route
+    - Post localhost:3000/api/carpetImages/add/:id
+
+9. Worker route 
+    - Post localhost:3000/worker/addWorker
+    - Post localhost:3000/worker/editWorker

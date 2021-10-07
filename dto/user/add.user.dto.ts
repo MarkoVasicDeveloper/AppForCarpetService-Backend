@@ -6,5 +6,5 @@ export class AddUserDto {
     city: string
     address: string
     phone: string
-    passwordHash: string
+    password: string
 }
