@@ -26,14 +26,17 @@ export class CarpetReception {
   @Column("int", { name: "worker_id", unsigned: true })
   workerId: number;
 
-  @Column("int", { name: "number_of_carpet", default: () => "'0'" })
-  numberOfCarpet: number;
+  @Column("int", { name: "number_of_carpet", nullable: true })
+  numberOfCarpet: number | null;
 
-  @Column("int", { name: "number_of_tracks", default: () => "'0'" })
-  numberOfTracks: number;
+  @Column("int", { name: "number_of_tracks", nullable: true })
+  numberOfTracks: number | null;
 
   @Column("text", { name: "note", nullable: true })
   note: string | null;
+
+  @Column("timestamp", { name: "time_at", default: () => "CURRENT_TIMESTAMP" })
+  timeAt: Date;
 
   @OneToMany(() => CarpetImages, (carpetImages) => carpetImages.carpetReception)
   carpetImages: CarpetImages[];

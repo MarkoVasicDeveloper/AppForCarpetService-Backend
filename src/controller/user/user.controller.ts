@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, Post, SetMetadata, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, SetMetadata, UseGuards } from "@nestjs/common";
 import { AddUserDto } from "dto/user/add.user.dto";
 import { DeleteUserByAdminDto } from "dto/user/delete.user.by.admin.dto";
 import { DeleteUserDto } from "dto/user/delete.user.dto";
@@ -53,5 +53,12 @@ export class UserController {
     @UseGuards(RolleCheckerGard)
     async getUserByEmail (@Body() data: UserEmailDto): Promise <User | ApiResponse> {
         return await this.userService.getUserByEmail(data)
+    }
+
+    @Post('getUserById/:id')
+    @SetMetadata('allow_to_roles', ['administrator', 'user'])
+    @UseGuards(RolleCheckerGard)
+    async getUserById (@Param('id') userId: number): Promise <User | ApiResponse> {
+        return await this.userService.getUserById(userId)
     }
 }

@@ -61,4 +61,31 @@ export class CarpetReceptionsService {
 
         return editCarpetReception;
     }
+
+    async getAllReceptionByuser(clientsId: number):Promise<CarpetReception[] | ApiResponse> {
+        const allReceptions = await this.carpetReception.find({
+            where: {
+                clientsId: clientsId
+            },
+            order: {
+                timeAt: 'ASC'
+            }
+        })
+
+        if (!allReceptions) {
+            return new ApiResponse('error', -11000, 'No order')
+        }
+
+        return allReceptions;
+    }
+
+    async getReceptionById(id: number):Promise <CarpetReception | ApiResponse> {
+        const carpetReception = await this.carpetReception.findOne(id);
+
+        if(!carpetReception) {
+            return new ApiResponse('error', -5001, 'Reception is not found')
+        }
+
+        return carpetReception;
+    }
 }

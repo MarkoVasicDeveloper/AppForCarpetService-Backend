@@ -16,26 +16,29 @@ export class ClientsService {
     constructor(@InjectRepository(Clients) private readonly clientsService: Repository<Clients>) { }
 
     async addClients (data: AddClientsDto):Promise<Clients> {
-        try {
-            const clients = new Clients();
-            clients.name = data.name;
-            clients.surname = data.surname;
-            clients.address = data.address;
+        
+        const existingClient = await this.clientsService.findOne({
+            where: {
+                name: data.name,
+                surname: data.surname,
+                address: data.address
+            }
+        })
 
-            const savedClient = await this.clientsService.save(clients);
-
-            return savedClient;
-
-        } catch (error) {
-            const existingClient = await this.clientsService.findOne({
-                where: {
-                    name: data.name,
-                    surname: data.surname
-                }
-            })
-
+        if(existingClient) {
             return existingClient;
         }
+
+        const clients = new Clients();
+        clients.name = data.name;
+        clients.surname = data.surname;
+        clients.address = data.address;
+
+        const savedClient = await this.clientsService.save(clients);
+
+        return savedClient;
+
+        
     }
 
     async editClient(data: EditClientDto, clientId: number):Promise <Clients | ApiResponse> {
@@ -60,6 +63,22 @@ export class ClientsService {
         const savedClient = await this.clientsService.save(client);
 
         return savedClient;
+    }
+
+    async getClientByNameSurnameAddress(data: AddClientsDto):Promise <Clients | ApiResponse> {
+        const client = await this.clientsService.findOne({
+            where: {
+                name: data.name,
+                surname: data.surname,
+                address: data.address
+            }
+        })
+
+        if(!client) {
+            return new ApiResponse('error', -4001, 'Client not found')
+        }
+
+        return client;
     }
 
     async getAllClients ():Promise <Clients[]> {

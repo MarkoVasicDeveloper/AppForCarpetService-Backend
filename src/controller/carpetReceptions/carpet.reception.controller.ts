@@ -27,4 +27,18 @@ export class CarpetReceprionController {
     async editCarpetReception (@Body() data: EditCarpetReception, @Param('id') workerId: number):Promise <CarpetReception | ApiResponse> {
         return await this.carpetReceptionService.editCarpetReception(data, workerId)
     }
+
+    @Post('getAllReceptionsByClient/:id')
+    @UseGuards(RolleCheckerGard)
+    @SetMetadata('allow_to_roles', ['user'])
+    async getAllReceptionsByClient(@Param('id') clientsId: number):Promise<CarpetReception[] | ApiResponse> {
+        return await this.carpetReceptionService.getAllReceptionByuser(clientsId)
+    }
+
+    @Post('getReceptionById/:id')
+    @UseGuards(RolleCheckerGard)
+    @SetMetadata('allow_to_roles', ['user'])
+    async getReceptionById(@Param('id') Id: number):Promise<CarpetReception | ApiResponse> {
+        return await this.carpetReceptionService.getReceptionById(Id)
+    }
 }

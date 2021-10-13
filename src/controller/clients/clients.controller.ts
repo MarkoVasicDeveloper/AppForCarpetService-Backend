@@ -17,8 +17,8 @@ export class ClientsContoller {
 
     @Post('addClient')
     @UseGuards(RolleCheckerGard)
-    @SetMetadata('allow_to_roles', ['user'])
-    async addClient(@Body() data: AddClientsDto): Promise <Clients | ApiResponse> {
+    @SetMetadata('allow_to_roles', ['user' , 'administrator'])
+    async addClient(@Body() data: AddClientsDto): Promise <Clients> {
         return await this.clientService.addClients(data)
     }
 
@@ -29,6 +29,13 @@ export class ClientsContoller {
         return await this.clientService.editClient(data, clientId)
     }
 
+    @Post('getClientByNameSurnameAddress')
+    @UseGuards(RolleCheckerGard)
+    @SetMetadata('allow_to_roles', ['user'])
+    async getClientByNameSurnameAddress(@Body() data: AddClientsDto):Promise <Clients | ApiResponse>{
+        return await this.clientService.getClientByNameSurnameAddress(data);
+    }
+
     @Get('getAllClients')
     @UseGuards(RolleCheckerGard)
     @SetMetadata('allow_to_roles', ['user'])
@@ -36,7 +43,7 @@ export class ClientsContoller {
         return await this.clientService.getAllClients()
     }
 
-    @Get('getClientsById/:id')
+    @Get('getClientById/:id')
     @UseGuards(RolleCheckerGard)
     @SetMetadata('allow_to_roles', ['user'])
     async getClientById (@Param('id') clientId: number):Promise <Clients | ApiResponse> {

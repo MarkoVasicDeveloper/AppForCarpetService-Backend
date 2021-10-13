@@ -1,6 +1,13 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  Index,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import { CarpetReception } from "./CarpetReception";
 
+@Index("name_surname_address", ["name", "surname", "address"], { unique: true })
 @Entity("clients", { schema: "apiperionica" })
 export class Clients {
   @PrimaryGeneratedColumn({ type: "int", name: "clients_id", unsigned: true })

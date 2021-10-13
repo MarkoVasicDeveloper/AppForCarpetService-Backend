@@ -1,12 +1,12 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { AddWorkerDto } from "dto/worker/add.worker.dto";
 import { EditWorkerDto } from "dto/worker/edit.worker.dto";
 import { Worker } from "entities/Worker";
 import { ApiResponse } from "src/misc/api.restonse";
 import { WorkerService } from "src/services/worker/workers.service";
 
-@Controller('worker')
+@Controller('api/worker')
 
 export class WorkerController {
     constructor(private readonly workerService: WorkerService) { }
@@ -19,5 +19,15 @@ export class WorkerController {
     @Post('editWorker')
     async editWorker (@Body() data: EditWorkerDto): Promise<Worker | ApiResponse> {
         return await this.workerService.editWorker(data)
+    }
+
+    @Post('findWorker')
+    async findWorker (@Body() data: AddWorkerDto):Promise<Worker | ApiResponse> {
+        return await this.workerService.findWorker(data)
+    }
+
+    @Get(':id')
+    async findWorkerById(@Param('id') id: number):Promise<Worker | ApiResponse>{
+        return await this.workerService.findWorkerById(id);
     }
 }
