@@ -7,6 +7,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { Carpet } from "./Carpet";
 import { CarpetImages } from "./CarpetImages";
 import { Clients } from "./Clients";
 
@@ -37,6 +38,12 @@ export class CarpetReception {
 
   @Column("timestamp", { name: "time_at", default: () => "CURRENT_TIMESTAMP" })
   timeAt: Date;
+
+  @Column("tinyint", { name: "prepare", width: 1, default: () => "'0'" })
+  prepare: boolean;
+
+  @OneToMany(() => Carpet, (carpet) => carpet.carpetReception2)
+  carpets: Carpet[];
 
   @OneToMany(() => CarpetImages, (carpetImages) => carpetImages.carpetReception)
   carpetImages: CarpetImages[];

@@ -2,6 +2,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Administrator } from 'entities/Administrator';
+import { Carpet } from 'entities/Carpet';
 import { CarpetImages } from 'entities/CarpetImages';
 import { CarpetReception } from 'entities/CarpetReception';
 import { Clients } from 'entities/Clients';
@@ -12,12 +13,14 @@ import { Worker } from 'entities/Worker';
 import { AuthMiddleware } from './authMiddleware/auth.middleware';
 import { AdministratorController } from './controller/administrator/administrator.controller';
 import { AuthController } from './controller/auth/auth.controller';
+import { CarpetController } from './controller/Carpet/carpet.controller';
 import { CarpetImagesController } from './controller/carpetImages/carpet.images.controller';
 import { CarpetReceprionController } from './controller/carpetReceptions/carpet.reception.controller';
 import { ClientsContoller } from './controller/clients/clients.controller';
 import { UserController } from './controller/user/user.controller';
 import { WorkerController } from './controller/worker/worker.controller';
 import { AdministratorService } from './services/administrator/administrator.service';
+import { CarpetService } from './services/Carpet/carpet.service';
 import { CarpetReceptionsService } from './services/carpetReceprion/carpet.reception.service';
 import { ClientsService } from './services/clients/clients.service';
 import { ImagesService } from './services/images/images.service';
@@ -40,7 +43,8 @@ import { WorkerService } from './services/worker/workers.service';
         Clients,
         CarpetReception,
         CarpetImages,
-        Worker
+        Worker,
+        Carpet
       ]
     }),
     TypeOrmModule.forFeature([
@@ -51,7 +55,8 @@ import { WorkerService } from './services/worker/workers.service';
       Clients, 
       CarpetReception, 
       CarpetImages,
-      Worker
+      Worker,
+      Carpet
     ])
   ],
   controllers: [
@@ -61,7 +66,8 @@ import { WorkerService } from './services/worker/workers.service';
       ClientsContoller,
       CarpetReceprionController,
       CarpetImagesController,
-      WorkerController
+      WorkerController,
+      CarpetController
     ],
   providers: [
     AdministratorService,
@@ -69,7 +75,8 @@ import { WorkerService } from './services/worker/workers.service';
     ClientsService,
     CarpetReceptionsService,
     ImagesService,
-    WorkerService
+    WorkerService,
+    CarpetService
   ],
 })
 export class AppModule implements NestModule {

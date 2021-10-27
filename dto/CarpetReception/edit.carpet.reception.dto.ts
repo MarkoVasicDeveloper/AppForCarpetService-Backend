@@ -4,4 +4,5 @@ export class EditCarpetReception {
     numberOfCarpet?: number
     numberOfTracks?: number
     note?: string | null
+    prepare?: true
 }

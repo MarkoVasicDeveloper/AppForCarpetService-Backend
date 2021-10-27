@@ -57,6 +57,10 @@ export class CarpetReceptionsService {
             carpetReception.note = data.note;
         }
 
+        if(data.prepare) {
+            carpetReception.prepare = data.prepare
+        }
+
         const editCarpetReception = await this.carpetReception.save(carpetReception)
 
         return editCarpetReception;

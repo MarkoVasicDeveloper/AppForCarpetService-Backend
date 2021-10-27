@@ -93,7 +93,7 @@ export class ClientsService {
         }
 
         return await this.clientsService.findOne(client.clientsId, {
-            relations: ['carpetReceptions', 'carpetReceptions.carpetImages']
+            relations: ['carpetReceptions', 'carpetReceptions.carpetImages', 'carpetReceptions.carpets']
         });
     }
 
