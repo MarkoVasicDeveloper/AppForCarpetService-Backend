@@ -22,6 +22,9 @@ export class Clients {
   @Column("varchar", { name: "address", length: 50, default: () => "'0'" })
   address: string;
 
+  @Column("date", { name: "time_at", default: () => "'curdate()'" })
+  timeAt: string;
+
   @OneToMany(
     () => CarpetReception,
     (carpetReception) => carpetReception.clients

@@ -5,4 +5,6 @@ export class EditCarpetReception {
     numberOfTracks?: number
     note?: string | null
     prepare?: true
+    delivered?: boolean
+    deliveredTime?: Date
 }

@@ -42,6 +42,20 @@ export class CarpetReception {
   @Column("tinyint", { name: "prepare", width: 1, default: () => "'0'" })
   prepare: boolean;
 
+  @Column("tinyint", {
+    name: "delivered",
+    nullable: true,
+    width: 1,
+    default: () => "'0'",
+  })
+  delivered: boolean | null;
+
+  @Column("datetime", { name: "deliveryTime", nullable: true })
+  deliveryTime: Date | null;
+
+  @Column("date", { name: "date_at", default: () => "'curdate()'" })
+  dateAt: string;
+
   @OneToMany(() => Carpet, (carpet) => carpet.carpetReception2)
   carpets: Carpet[];
 

@@ -42,6 +42,9 @@ export class Carpet {
   @Column("date", { name: "deliveryTime" })
   deliveryTime: string;
 
+  @Column("date", { name: "time_at", default: () => "'curdate()'" })
+  timeAt: string;
+
   @ManyToOne(
     () => CarpetReception,
     (carpetReception) => carpetReception.carpets,
