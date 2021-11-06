@@ -36,4 +36,11 @@ export class AnalysisController{
     async getDataForYear():Promise<AnalysisInfo> {
         return await this.analysisService.theYearReport();
     }
+
+    @Get('lastSevenDayReport')
+    @UseGuards(RolleCheckerGard)
+    @SetMetadata('allow_to_roles', ['user'])
+    async lastSevenDayReport() {
+        return await this.analysisService.lastSevenDayReport();
+    }
 }
