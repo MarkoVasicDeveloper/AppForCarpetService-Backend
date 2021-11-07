@@ -5,7 +5,7 @@ import { Carpet } from "entities/Carpet";
 import { CarpetReception } from "entities/CarpetReception";
 import { Clients } from "entities/Clients";
 import { AnalysisInfo } from "src/misc/analysis.info";
-import { MoreThan, Repository } from "typeorm";
+import { LessThanOrEqual, MoreThan, MoreThanOrEqual, Repository } from "typeorm";
 
 @Injectable()
 
@@ -481,5 +481,142 @@ export class BuisnessAnalysis {
                 'lastSevenDayPay' : carpetSevenDayPay,
             }
         ]
+    }
+
+    async montryReport(data: string) {
+        const d = new Date(data);
+        d.setDate(d.getDate() - 30);// Return 30 days back in ISOstring format
+        const dt = new Date(data);
+        dt.setDate(dt.getDate())
+        
+        const allClient = await this.clientsService.find({
+            where: {
+                timeAt: MoreThanOrEqual(d.toISOString().split('T')[0]) && LessThanOrEqual(data)//d.toISOString().split('T')[0]
+            }
+        })
+
+        function groupBy(objectArray: any[], property: string | number) {
+            return objectArray.reduce(function (acc, obj) {
+              const key = obj[property]
+              if (!acc[key]) {
+                acc[key] = []
+              }
+              acc[key].push(obj)
+              return acc
+            }, [])
+          }
+
+        const groupedPeople = groupBy(allClient, 'timeAt')
+
+        const da = new Date(data);
+        da.setDate(da.getDate() - 30);// Return 30 days back in ISOstring format
+
+        const time = []
+
+        function arrayOfDate(date, numberOfDays) {
+            for(let i=0; i<numberOfDays; i++) {
+                const da = new Date(date);
+                da.setDate(da.getDate() - i)
+                time.push(da.toISOString().split('T')[0])
+            }
+        }
+        arrayOfDate(data, 30)
+
+        const finallyArrClients = [];
+        for (const timeDate of time){
+            if(groupedPeople[timeDate]) {
+                finallyArrClients.push({
+                    time: timeDate,
+                    number: groupedPeople[timeDate].length
+                })
+            }
+            
+        }
+        
+        const allReceptions = await this.carpetReceptionService.find({
+            where: {
+                timeAt: MoreThanOrEqual(d.toISOString().split('T')[0]) && LessThanOrEqual(data)//d.toISOString().split('T')[0]
+            }
+        })
+
+        const groupedReception = groupBy(allReceptions, 'dateAt')
+
+        const finallyArrReceptions = [];
+        for (const timeDate of time){
+            if(groupedReception[timeDate]) {
+                let numberOfCarpet = 0;
+                for(const reception of groupedReception[timeDate]){
+                    numberOfCarpet += reception.numberOfCarpet + reception.numberOfTracks
+                }
+                finallyArrReceptions.push({
+                    time: timeDate,
+                    numberOfCarpet: numberOfCarpet
+                })
+            }
+        }
+
+        const allCarpet = await this.carpetService.find({
+            where: {
+                timeAt: MoreThanOrEqual(d.toISOString().split('T')[0]) && LessThanOrEqual(data)//d.toISOString().split('T')[0]
+            }
+        })
+
+        const grupedCarpet = groupBy(allCarpet, 'timeAt')
+
+        const finallyArrCarpetSurface = [];
+        const finallyArrCarpetPay = [];
+        for (const timeDate of time){
+            if(grupedCarpet[timeDate]) {
+                let surface = 0;
+                let pay = 0;
+                for(const carpet of grupedCarpet[timeDate]){
+                    surface += carpet.carpetSurface;
+                    pay += carpet.forPayment;
+                }
+                finallyArrCarpetSurface.push({
+                    time: timeDate,
+                    surface: surface
+                })
+                finallyArrCarpetPay.push({
+                    time: timeDate,
+                    pay: pay
+                })
+            }
+        }
+
+        console.log(finallyArrReceptions)
+
+        return [
+            {
+                'Clients' : finallyArrClients
+            },
+            {
+                'Carpet' : finallyArrReceptions
+            },
+            {
+                'Surface' : finallyArrCarpetSurface
+            },
+            {
+                'ForPayment' : finallyArrCarpetPay
+            }
+        ]
+    }
+
+    async yearReport() {
+        //concatination all clients, carpet, surface and forPay and r3eturn for all monts
+        const january = await this.montryReport('2021-1-31')
+        const february = await this.montryReport('2021-2-28')
+        const march = await this.montryReport('2021-3-31')
+        const april = await this.montryReport('2021-4-30')
+        const may = await this.montryReport('2021-5-31')
+        const jun = await this.montryReport('2021-6-30')
+        const july = await this.montryReport('2021-7-31')
+        const august = await this.montryReport('2021-8-30')
+        const september = await this.montryReport('2021-9-30')
+        const october = await this.montryReport('2021-10-31')
+        const november = await this.montryReport('2021-11-30')
+        const december = await this.montryReport('2021-12-31')
+
+        return [january, february, march, april, may, jun, july, august, september, october, november, december]
     }
 }

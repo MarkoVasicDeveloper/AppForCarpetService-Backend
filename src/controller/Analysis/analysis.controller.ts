@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, SetMetadata, UseGuards } from "@nestjs/common";
+import { Controller, Get, Param, Post, SetMetadata, UseGuards } from "@nestjs/common";
 import { AnalysisInfo } from "src/misc/analysis.info";
 import { RolleCheckerGard } from "src/rollecheckergard/rolle.checker.gatd";
 import { BuisnessAnalysis } from "src/services/Analysis/BuisnessAnalysis";
@@ -42,5 +42,19 @@ export class AnalysisController{
     @SetMetadata('allow_to_roles', ['user'])
     async lastSevenDayReport() {
         return await this.analysisService.lastSevenDayReport();
+    }
+
+    @Post('montlyReport/:id')
+    @UseGuards(RolleCheckerGard)
+    @SetMetadata('allow_to_roles', ['user'])
+    async mondlyReport(@Param('id') id: string) {
+        return await this.analysisService.montryReport(id)
+    }
+
+    @Get('yearReport/')
+    @UseGuards(RolleCheckerGard)
+    @SetMetadata('allow_to_roles', ['user'])
+    async yearReport() {
+        return await this.analysisService.yearReport()
     }
 }
