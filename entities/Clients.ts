@@ -7,7 +7,11 @@ import {
 } from "typeorm";
 import { CarpetReception } from "./CarpetReception";
 
-@Index("name_surname_address", ["name", "surname", "address"], { unique: true })
+@Index(
+  "name_surname_address_user_id",
+  ["name", "surname", "address", "userId"],
+  { unique: true }
+)
 @Entity("clients", { schema: "apiperionica" })
 export class Clients {
   @PrimaryGeneratedColumn({ type: "int", name: "clients_id", unsigned: true })
@@ -24,6 +28,9 @@ export class Clients {
 
   @Column("date", { name: "time_at", default: () => "'curdate()'" })
   timeAt: string;
+
+  @Column("int", { name: "user_id", unsigned: true, default: () => "'0'" })
+  userId: number;
 
   @OneToMany(
     () => CarpetReception,

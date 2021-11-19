@@ -1,25 +1,19 @@
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from "typeorm";
-import { CarpetReception } from "./CarpetReception";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
-@Index("FK_carpet_carpet_reception", ["carpetReception"], {})
 @Entity("carpet", { schema: "apiperionica" })
 export class Carpet {
   @PrimaryGeneratedColumn({ type: "int", name: "carpet_id", unsigned: true })
   carpetId: number;
 
+  @Column("int", { name: "carpet_reception_user", unsigned: true })
+  carpetReceptionUser: number;
+
   @Column("int", {
     name: "carpet_reception",
-    unsigned: true,
+    nullable: true,
     default: () => "'0'",
   })
-  carpetReception: number;
+  carpetReception: number | null;
 
   @Column("int", { name: "width", default: () => "'0'" })
   width: number;
@@ -45,13 +39,9 @@ export class Carpet {
   @Column("date", { name: "time_at", default: () => "'curdate()'" })
   timeAt: string;
 
-  @ManyToOne(
-    () => CarpetReception,
-    (carpetReception) => carpetReception.carpets,
-    { onDelete: "NO ACTION", onUpdate: "CASCADE" }
-  )
-  @JoinColumn([
-    { name: "carpet_reception", referencedColumnName: "carpetReception" },
-  ])
-  carpetReception2: CarpetReception;
+  @Column("int", { name: "userId", unsigned: true })
+  userId: number;
+
+  @Column("int", { name: "clients_id", unsigned: true })
+  clientsId: number;
 }

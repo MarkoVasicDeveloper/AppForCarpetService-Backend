@@ -32,4 +32,7 @@ export class SchedulingCarpet {
 
   @Column("tinyint", { name: "is_scheduling", width: 1, default: () => "'0'" })
   isScheduling: boolean;
+
+  @Column("int", { name: "user_id", unsigned: true })
+  userId: number;
 }

@@ -12,12 +12,13 @@ import { Repository } from "typeorm";
 export default class SchadulingCarpetService {
     constructor(@InjectRepository(SchedulingCarpet) private readonly schedulingCarpetService: Repository<SchedulingCarpet>) {}
 
-    async addSchedulingCarpet(data: SchedulingCarpetDto): Promise <SchedulingCarpet> {
+    async addSchedulingCarpet(data: SchedulingCarpetDto, userId: number): Promise <SchedulingCarpet> {
         const schedulingCarpet = new SchedulingCarpet();
         schedulingCarpet.name = data.name;
         schedulingCarpet.surname = data.surname;
         schedulingCarpet.address = data.address;
         schedulingCarpet.phone = data.phone;
+        schedulingCarpet.userId = userId;
 
         if(data.email) {
             schedulingCarpet.email = data.email;
@@ -32,8 +33,13 @@ export default class SchadulingCarpetService {
         return savedSchedulingCarpet;
     }
 
-    async editSchedulingCarpet (data : EditSchedulingCarpetDto): Promise<SchedulingCarpet | ApiResponse> {
-        const schedulingCarpet = await this.schedulingCarpetService.findOne(data.scheduling_carpet_id);
+    async editSchedulingCarpet (data : EditSchedulingCarpetDto, userId: number): Promise<SchedulingCarpet | ApiResponse> {
+        const schedulingCarpet = await this.schedulingCarpetService.findOne({
+            where: {
+                schedulingCarpetId: data.scheduling_carpet_id,
+                userId: userId
+            }
+        });
 
         if(!schedulingCarpet) {
             return new ApiResponse('error', -12001, 'Not found');
@@ -46,10 +52,11 @@ export default class SchadulingCarpetService {
         return savedShedulingCarpet;
     }
 
-    async getAllScheduling():Promise<SchedulingCarpet[]> {
+    async getAllScheduling(userId: number):Promise<SchedulingCarpet[]> {
         const all = await this.schedulingCarpetService.find({
             where: {
-                isScheduling: '0'
+                isScheduling: '0',
+                userId: userId
             }
         });
 

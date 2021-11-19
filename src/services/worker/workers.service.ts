@@ -87,8 +87,13 @@ export class WorkerService {
         return worker;
     }
 
-    async findWorkerById (id: number):Promise<Worker | ApiResponse> {
-        const worker = await this.workerService.findOne(id);
+    async findWorkerById (id: number, userId: number):Promise<Worker | ApiResponse> {
+        const worker = await this.workerService.findOne({
+            where: {
+                workerId: id,
+                userId: userId
+            }
+        });
 
         if (!worker) {
             return new ApiResponse('error', -5002, 'Worker is not found');

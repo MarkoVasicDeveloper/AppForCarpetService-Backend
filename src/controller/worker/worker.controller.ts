@@ -26,8 +26,8 @@ export class WorkerController {
         return await this.workerService.findWorker(data)
     }
 
-    @Get(':id')
-    async findWorkerById(@Param('id') id: number):Promise<Worker | ApiResponse>{
-        return await this.workerService.findWorkerById(id);
+    @Get(':id/:userId')
+    async findWorkerById(@Param('id') id: number, @Param('userId') userId: number):Promise<Worker | ApiResponse>{
+        return await this.workerService.findWorkerById(id, userId);
     }
 }

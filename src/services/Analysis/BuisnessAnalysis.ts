@@ -15,12 +15,13 @@ export class BuisnessAnalysis {
                 @InjectRepository(Carpet) private readonly carpetService: Repository<Carpet>
     ) { }
 
-    async getDailyReport():Promise<AnalysisInfo> {
+    async getDailyReport(userId: number):Promise<AnalysisInfo> {
         const date = new Date().toISOString().split('T')[0]
         
         const allClient = await this.clientsService.find({
             where: {
-                timeAt: date
+                timeAt: date,
+                userId: userId
             }
         })
 
@@ -28,7 +29,8 @@ export class BuisnessAnalysis {
 
         const allReceptions = await this.carpetReceptionService.find({
             where: {
-                dateAt: new Date().toISOString().split('T')[0]
+                dateAt: new Date().toISOString().split('T')[0],
+                userId: userId
             }
         })
         
@@ -41,7 +43,8 @@ export class BuisnessAnalysis {
 
         const allCarpet = await this.carpetService.find({
             where: {
-                timeAt: new Date().toISOString().split('T')[0]
+                timeAt: new Date().toISOString().split('T')[0],
+                userId: userId
             }
         })
 
@@ -62,13 +65,14 @@ export class BuisnessAnalysis {
         )
     }
 
-    async theWeeklyReport():Promise<AnalysisInfo> {
+    async theWeeklyReport(userId: number):Promise<AnalysisInfo> {
         const d = new Date();
         d.setDate(d.getDate()-7);
         
         const allClient = await this.clientsService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0])
+                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                userId: userId
             }
         })
 
@@ -76,7 +80,8 @@ export class BuisnessAnalysis {
 
         const allReceptions = await this.carpetReceptionService.find({
             where: {
-                dateAt: MoreThan(d.toISOString().split('T')[0])
+                dateAt: MoreThan(d.toISOString().split('T')[0]),
+                userId: userId
             }
         })
 
@@ -89,7 +94,8 @@ export class BuisnessAnalysis {
 
         const allCarpet = await this.carpetService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0])
+                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                userId: userId
             }
         })
 
@@ -110,13 +116,14 @@ export class BuisnessAnalysis {
         )
     }
 
-    async theMontlyReport():Promise<AnalysisInfo> {
+    async theMontlyReport(userId: number):Promise<AnalysisInfo> {
         const d = new Date();
         d.setDate(d.getDate()-30);
         
         const allClient = await this.clientsService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0])
+                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                userId: userId
             }
         })
 
@@ -124,7 +131,8 @@ export class BuisnessAnalysis {
 
         const allReceptions = await this.carpetReceptionService.find({
             where: {
-                dateAt: MoreThan(d.toISOString().split('T')[0])
+                dateAt: MoreThan(d.toISOString().split('T')[0]),
+                userId: userId
             }
         })
 
@@ -137,7 +145,8 @@ export class BuisnessAnalysis {
 
         const allCarpet = await this.carpetService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0])
+                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                userId: userId
             }
         })
 
@@ -158,13 +167,14 @@ export class BuisnessAnalysis {
         )
     }
 
-    async theYearReport():Promise<AnalysisInfo> {
+    async theYearReport(userID: number):Promise<AnalysisInfo> {
         const d = new Date();
         d.setDate(d.getDate()-365);
         
         const allClient = await this.clientsService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0])
+                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                userId: userID
             }
         })
 
@@ -172,7 +182,8 @@ export class BuisnessAnalysis {
 
         const allReceptions = await this.carpetReceptionService.find({
             where: {
-                dateAt: MoreThan(d.toISOString().split('T')[0])
+                dateAt: MoreThan(d.toISOString().split('T')[0]),
+                userId: userID
             }
         })
 
@@ -185,7 +196,8 @@ export class BuisnessAnalysis {
 
         const allCarpet = await this.carpetService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0])
+                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                userId: userID
             }
         })
 
@@ -206,13 +218,14 @@ export class BuisnessAnalysis {
         )
     }
 
-    async lastSevenDayReport () {
+    async lastSevenDayReport (userId: number) {
         const d = new Date();
         d.setDate(d.getDate()-8);
 
         const allClient = await this.clientsService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0])
+                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                userId: userId
             },
             order: {
                 timeAt: 'DESC'
@@ -290,7 +303,8 @@ export class BuisnessAnalysis {
 
         const allReceptions = await this.carpetReceptionService.find({
             where: {
-                dateAt: MoreThan(t.toISOString().split('T')[0])
+                dateAt: MoreThan(t.toISOString().split('T')[0]),
+                userId: userId
             },
             order: {
                 timeAt: 'DESC'
@@ -358,7 +372,8 @@ export class BuisnessAnalysis {
 
         const allCarpet = await this.carpetService.find({
             where: {
-                timeAt: MoreThan(dt.toISOString().split('T')[0])
+                timeAt: MoreThan(dt.toISOString().split('T')[0]),
+                userId: userId
             },
             order: {
                 timeAt: 'DESC'
@@ -483,7 +498,7 @@ export class BuisnessAnalysis {
         ]
     }
 
-    async montryReport(data: string) {
+    async montryReport(data: string, userId: number) {
         const d = new Date(data);
         d.setDate(d.getDate() - 30);// Return 30 days back in ISOstring format
         const dt = new Date(data);
@@ -491,7 +506,8 @@ export class BuisnessAnalysis {
         
         const allClient = await this.clientsService.find({
             where: {
-                timeAt: MoreThanOrEqual(d.toISOString().split('T')[0]) && LessThanOrEqual(data)//d.toISOString().split('T')[0]
+                timeAt: MoreThanOrEqual(d.toISOString().split('T')[0]) && LessThanOrEqual(data),//d.toISOString().split('T')[0]
+                userId: userId
             }
         })
 
@@ -535,7 +551,8 @@ export class BuisnessAnalysis {
         
         const allReceptions = await this.carpetReceptionService.find({
             where: {
-                timeAt: MoreThanOrEqual(d.toISOString().split('T')[0]) && LessThanOrEqual(data)//d.toISOString().split('T')[0]
+                timeAt: MoreThanOrEqual(d.toISOString().split('T')[0]) && LessThanOrEqual(data),//d.toISOString().split('T')[0]
+                userId: userId
             }
         })
 
@@ -557,7 +574,8 @@ export class BuisnessAnalysis {
 
         const allCarpet = await this.carpetService.find({
             where: {
-                timeAt: MoreThanOrEqual(d.toISOString().split('T')[0]) && LessThanOrEqual(data)//d.toISOString().split('T')[0]
+                timeAt: MoreThanOrEqual(d.toISOString().split('T')[0]) && LessThanOrEqual(data),//d.toISOString().split('T')[0]
+                userId: userId
             }
         })
 
@@ -584,8 +602,6 @@ export class BuisnessAnalysis {
             }
         }
 
-        console.log(finallyArrReceptions)
-
         return [
             {
                 'Clients' : finallyArrClients
@@ -602,21 +618,575 @@ export class BuisnessAnalysis {
         ]
     }
 
-    async yearReport() {
-        //concatination all clients, carpet, surface and forPay and r3eturn for all monts
-        const january = await this.montryReport('2021-1-31')
-        const february = await this.montryReport('2021-2-28')
-        const march = await this.montryReport('2021-3-31')
-        const april = await this.montryReport('2021-4-30')
-        const may = await this.montryReport('2021-5-31')
-        const jun = await this.montryReport('2021-6-30')
-        const july = await this.montryReport('2021-7-31')
-        const august = await this.montryReport('2021-8-30')
-        const september = await this.montryReport('2021-9-30')
-        const october = await this.montryReport('2021-10-31')
-        const november = await this.montryReport('2021-11-30')
-        const december = await this.montryReport('2021-12-31')
+    async yearReport(userId: number) {
+        //concatination all clients, carpet, surface and forPay and return for all monts
+        const january = await this.montryReport('2021-1-31', userId)
+        const february = await this.montryReport('2021-2-28', userId)
+        const march = await this.montryReport('2021-3-31', userId)
+        const april = await this.montryReport('2021-4-30', userId)
+        const may = await this.montryReport('2021-5-31', userId)
+        const jun = await this.montryReport('2021-6-30', userId)
+        const july = await this.montryReport('2021-7-31', userId)
+        const august = await this.montryReport('2021-8-30', userId)
+        const september = await this.montryReport('2021-9-30', userId)
+        const october = await this.montryReport('2021-10-31', userId)
+        const november = await this.montryReport('2021-11-30', userId)
+        const december = await this.montryReport('2021-12-31', userId)
 
-        return [january, february, march, april, may, jun, july, august, september, october, november, december]
+        let januaryNumberOfClients = 0;
+        let januaryNumberOfCarpet = 0;
+        let januaryNumberOfSurface = 0;
+        let januaryNumberOfPay = 0;
+        
+        for (const obj of january) {
+            if (obj.Clients) {
+                try {
+                    for(const client of obj.Clients) {
+                        januaryNumberOfClients += client.number
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Carpet) {
+                try {
+                    for(const carpet of obj.Carpet) {
+                        januaryNumberOfCarpet += carpet.numberOfCarpet
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Surface) {
+                try {
+                    for(const surface of obj.Surface) {
+                        januaryNumberOfSurface += surface.surface
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.ForPayment) {
+                try {
+                    for(const pay of obj.ForPayment) {
+                        januaryNumberOfPay += pay.pay
+                    }
+                } catch (error) {}
+                
+            }
+        }
+
+        let februaryNumberOfClients = 0;
+        let februaryNumberOfCarpet = 0;
+        let februaryNumberOfSurface = 0;
+        let februaryNumberOfPay = 0;
+        
+        for (const obj of february) {
+            if (obj.Clients) {
+                try {
+                    for(const client of obj.Clients) {
+                        februaryNumberOfClients += client.number
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Carpet) {
+                try {
+                    for(const carpet of obj.Carpet) {
+                        februaryNumberOfCarpet += carpet.numberOfCarpet
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Surface) {
+                try {
+                    for(const surface of obj.Surface) {
+                        februaryNumberOfSurface += surface.surface
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.ForPayment) {
+                try {
+                    for(const pay of obj.ForPayment) {
+                        februaryNumberOfPay += pay.pay
+                    }
+                } catch (error) {}
+                
+            }
+        }
+
+        let marchNumberOfClients = 0;
+        let marchNumberOfCarpet = 0;
+        let marchNumberOfSurface = 0;
+        let marchNumberOfPay = 0;
+        
+        for (const obj of march) {
+            if (obj.Clients) {
+                try {
+                    for(const client of obj.Clients) {
+                        marchNumberOfClients += client.number
+                    } 
+                } catch (error) {}
+                
+            }
+            if (obj.Carpet) {
+                try {
+                    for(const carpet of obj.Carpet) {
+                        marchNumberOfCarpet += carpet.numberOfCarpet
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Surface) {
+                try {
+                    for(const surface of obj.Surface) {
+                        marchNumberOfSurface += surface.surface
+                    }
+                } catch (error) {}
+               
+            }
+            if (obj.ForPayment) {
+                try {
+                    for(const pay of obj.ForPayment) {
+                        marchNumberOfPay += pay.pay
+                    }
+                } catch (error) {}
+                
+            }
+        }
+
+        let aprilNumberOfClients = 0;
+        let aprilNumberOfCarpet = 0;
+        let aprilNumberOfSurface = 0;
+        let aprilNumberOfPay = 0;
+        
+        for (const obj of april) {
+            if (obj.Clients) {
+                try {
+                    for(const client of obj.Clients) {
+                        aprilNumberOfClients += client.number
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Carpet) {
+                try {
+                    for(const carpet of obj.Carpet) {
+                        aprilNumberOfCarpet += carpet.numberOfCarpet
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Surface) {
+                try {
+                    for(const surface of obj.Surface) {
+                        aprilNumberOfSurface += surface.surface
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.ForPayment) {
+                try {
+                    for(const pay of obj.ForPayment) {
+                        aprilNumberOfPay += pay.pay
+                    }
+                } catch (error) {}
+                
+            }
+        }
+
+        let mayNumberOfClients = 0;
+        let mayNumberOfCarpet = 0;
+        let mayNumberOfSurface = 0;
+        let mayNumberOfPay = 0;
+        
+        for (const obj of may) {
+            if (obj.Clients) {
+                try {
+                    for(const client of obj.Clients) {
+                        mayNumberOfClients += client.number
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Carpet) {
+                try {
+                    for(const carpet of obj.Carpet) {
+                        mayNumberOfCarpet += carpet.numberOfCarpet
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Surface) {
+                try {
+                    for(const surface of obj.Surface) {
+                        mayNumberOfSurface += surface.surface
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.ForPayment) {
+                try {
+                    for(const pay of obj.ForPayment) {
+                        mayNumberOfPay += pay.pay
+                    }
+                } catch (error) {}
+                
+            }
+        }
+
+        let junNumberOfClients = 0;
+        let junNumberOfCarpet = 0;
+        let junNumberOfSurface = 0;
+        let junNumberOfPay = 0;
+        
+        for (const obj of jun) {
+            if (obj.Clients) {
+                try {
+                    for(const client of obj.Clients) {
+                        junNumberOfClients += client.number
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Carpet) {
+                try {
+                    for(const carpet of obj.Carpet) {
+                        junNumberOfCarpet += carpet.numberOfCarpet
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Surface) {
+                try {
+                    for(const surface of obj.Surface) {
+                        junNumberOfSurface += surface.surface
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.ForPayment) {
+                try {
+                    for(const pay of obj.ForPayment) {
+                        junNumberOfPay += pay.pay
+                    }
+                } catch (error) {}
+                
+            }
+        }
+
+        let julyNumberOfClients = 0;
+        let julyNumberOfCarpet = 0;
+        let julyNumberOfSurface = 0;
+        let julyNumberOfPay = 0;
+        
+        for (const obj of july) {
+            if (obj.Clients) {
+                try {
+                    for(const client of obj.Clients) {
+                        julyNumberOfClients += client.number
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Carpet) {
+                try {
+                    for(const carpet of obj.Carpet) {
+                        julyNumberOfCarpet += carpet.numberOfCarpet
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Surface) {
+                try {
+                    for(const surface of obj.Surface) {
+                        julyNumberOfSurface += surface.surface
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.ForPayment) {
+                try {
+                    for(const pay of obj.ForPayment) {
+                        julyNumberOfPay += pay.pay
+                    }
+                } catch (error) {}
+                
+            }
+        }
+
+        let augustNumberOfClients = 0;
+        let augustNumberOfCarpet = 0;
+        let augustNumberOfSurface = 0;
+        let augustNumberOfPay = 0;
+        
+        for (const obj of august) {
+            if (obj.Clients) {
+                try {
+                    for(const client of obj.Clients) {
+                        augustNumberOfClients += client.number
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Carpet) {
+                try {
+                    for(const carpet of obj.Carpet) {
+                        augustNumberOfCarpet += carpet.numberOfCarpet
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Surface) {
+                try {
+                    for(const surface of obj.Surface) {
+                        augustNumberOfSurface += surface.surface
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.ForPayment) {
+                try {
+                    for(const pay of obj.ForPayment) {
+                        augustNumberOfPay += pay.pay
+                    }
+                } catch (error) {}
+                
+            }
+        }
+
+        let septemberNumberOfClients = 0;
+        let septemberNumberOfCarpet = 0;
+        let septemberNumberOfSurface = 0;
+        let septemberNumberOfPay = 0;
+        
+        for (const obj of september) {
+            if (obj.Clients) {
+                try {
+                    for(const client of obj.Clients) {
+                        septemberNumberOfClients += client.number
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Carpet) {
+                try {
+                    for(const carpet of obj.Carpet) {
+                        septemberNumberOfCarpet += carpet.numberOfCarpet
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Surface) {
+                try {
+                    for(const surface of obj.Surface) {
+                        septemberNumberOfSurface += surface.surface
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.ForPayment) {
+                try {
+                    for(const pay of obj.ForPayment) {
+                        septemberNumberOfPay += pay.pay
+                    }
+                } catch (error) { }
+                
+            }
+        }
+
+        let octoberNumberOfClients = 0;
+        let octoberNumberOfCarpet = 0;
+        let octoberNumberOfSurface = 0;
+        let octoberNumberOfPay = 0;
+        
+        for (const obj of october) {
+            if (obj.Clients) {
+                try {
+                    for(const client of obj.Clients) {
+                        octoberNumberOfClients += client.number
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Carpet) {
+                try {
+                    for(const carpet of obj.Carpet) {
+                        octoberNumberOfCarpet += carpet.numberOfCarpet
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Surface) {
+                try {
+                    for(const surface of obj.Surface) {
+                        octoberNumberOfSurface += surface.surface
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.ForPayment) {
+                try {
+                    for(const pay of obj.ForPayment) {
+                        octoberNumberOfPay += pay.pay
+                    }
+                } catch (error) {}
+                
+            }
+        }
+
+        let novemberNumberOfClients = 0;
+        let novemberNumberOfCarpet = 0;
+        let novemberNumberOfSurface = 0;
+        let novemberNumberOfPay = 0;
+        
+        for (const obj of november) {
+            if (obj.Clients) {
+                try {
+                    for(const client of obj.Clients) {
+                        novemberNumberOfClients += client.number
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Carpet) {
+                try {
+                    for(const carpet of obj.Carpet) {
+                        novemberNumberOfCarpet += carpet.numberOfCarpet
+                        
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Surface) {
+                try {
+                    for(const surface of obj.Surface) {
+                        novemberNumberOfSurface += surface.surface
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.ForPayment) {
+                try {
+                    for(const pay of obj.ForPayment) {
+                        novemberNumberOfPay += pay.pay
+                    }
+                } catch (error) {}
+                
+            }
+        }
+
+        let decemberNumberOfClients = 0;
+        let decemberNumberOfCarpet = 0;
+        let decemberNumberOfSurface = 0;
+        let decemberNumberOfPay = 0;
+        
+        for (const obj of december) {
+            if (obj.Clients) {
+                try{
+                    for(const client of obj.Clients) {
+                        decemberNumberOfClients += client.number
+                    }
+                }catch{}
+                
+            }
+            if (obj.Carpet) {
+                try {
+                    for(const carpet of obj.Carpet) {
+                        decemberNumberOfCarpet += carpet.numberOfCarpet
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.Surface) {
+                try {
+                    for(const surface of obj.Surface) {
+                        decemberNumberOfSurface += surface.surface
+                    }
+                } catch (error) {}
+                
+            }
+            if (obj.ForPayment) {
+                try {
+                    for(const pay of obj.ForPayment) {
+                        decemberNumberOfPay += pay.pay
+                    }
+                } catch (error) {}
+                
+            }
+        }
+
+        return { 
+            january: { 
+                'Clients' : januaryNumberOfClients, 
+                'Carpet' : januaryNumberOfCarpet, 
+                'Surface': januaryNumberOfSurface,
+                'ForPayment' : januaryNumberOfPay
+            },
+            february: { 
+                'Clients' : februaryNumberOfClients, 
+                'Carpet' : februaryNumberOfCarpet, 
+                'Surface': februaryNumberOfSurface,
+                'ForPayment' : februaryNumberOfPay
+            },
+            march: { 
+                'Clients' : marchNumberOfClients, 
+                'Carpet' : marchNumberOfCarpet, 
+                'Surface': marchNumberOfSurface,
+                'ForPayment' : marchNumberOfPay
+            },
+            april: { 
+                'Clients' : aprilNumberOfClients, 
+                'Carpet' : aprilNumberOfCarpet, 
+                'Surface': aprilNumberOfSurface,
+                'ForPayment' : aprilNumberOfPay
+            },
+            may: { 
+                'Clients' : mayNumberOfClients, 
+                'Carpet' : mayNumberOfCarpet, 
+                'Surface': mayNumberOfSurface,
+                'ForPayment' : mayNumberOfPay
+            },
+            jun: { 
+                'Clients' : junNumberOfClients, 
+                'Carpet' : junNumberOfCarpet, 
+                'Surface': junNumberOfSurface,
+                'ForPayment' : junNumberOfPay
+            },
+            july: { 
+                'Clients' : julyNumberOfClients, 
+                'Carpet' : julyNumberOfCarpet, 
+                'Surface': julyNumberOfSurface,
+                'ForPayment' : julyNumberOfPay
+            },
+            august: { 
+                'Clients' : augustNumberOfClients, 
+                'Carpet' : augustNumberOfCarpet, 
+                'Surface': augustNumberOfSurface,
+                'ForPayment' : augustNumberOfPay
+            },
+            september: { 
+                'Clients' : septemberNumberOfClients, 
+                'Carpet' : septemberNumberOfCarpet, 
+                'Surface': septemberNumberOfSurface,
+                'ForPayment' : septemberNumberOfPay
+            }, 
+            october: { 
+                'Clients' : octoberNumberOfClients, 
+                'Carpet' : octoberNumberOfCarpet, 
+                'Surface': octoberNumberOfSurface,
+                'ForPayment' : octoberNumberOfPay
+            }, 
+            novembar: { 
+                'Clients' : novemberNumberOfClients, 
+                'Carpet' : novemberNumberOfCarpet, 
+                'Surface': novemberNumberOfSurface,
+                'ForPayment' : novemberNumberOfPay
+            },
+            december: { 
+                'Clients' : decemberNumberOfClients, 
+                'Carpet' : decemberNumberOfCarpet, 
+                'Surface': decemberNumberOfSurface,
+                'ForPayment' : decemberNumberOfPay
+            },
+        }
     }
 }

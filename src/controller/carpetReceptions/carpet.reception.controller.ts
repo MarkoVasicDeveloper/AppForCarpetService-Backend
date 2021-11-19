@@ -21,24 +21,31 @@ export class CarpetReceprionController {
         return await this.carpetReceptionService.addCarpetReception(data, workerId)
     }
 
-    @Post('editReception/:id')
+    @Post('editReception/:id/:userId')
     @UseGuards(RolleCheckerGard)
     @SetMetadata('allow_to_roles', ['user'])
-    async editCarpetReception (@Body() data: EditCarpetReception, @Param('id') workerId: number):Promise <CarpetReception | ApiResponse> {
-        return await this.carpetReceptionService.editCarpetReception(data, workerId)
+    async editCarpetReception (@Body() data: EditCarpetReception, @Param('id') workerId: number, @Param('userId') userId: number):Promise <CarpetReception | ApiResponse> {
+        return await this.carpetReceptionService.editCarpetReception(data, workerId, userId)
     }
 
-    @Post('getAllReceptionsByClient/:id')
+    @Post('getAllReceptionsByClient/:id/:idUser')
     @UseGuards(RolleCheckerGard)
     @SetMetadata('allow_to_roles', ['user'])
-    async getAllReceptionsByClient(@Param('id') clientsId: number):Promise<CarpetReception[] | ApiResponse> {
-        return await this.carpetReceptionService.getAllReceptionByuser(clientsId)
+    async getAllReceptionsByClient(@Param('id') clientsId: number, @Param('idUser') userId: number):Promise<CarpetReception[] | ApiResponse> {
+        return await this.carpetReceptionService.getAllReceptionByuser(clientsId, userId)
     }
 
-    @Post('getReceptionById/:id')
+    @Post('getReceptionById/:id/:userId')
     @UseGuards(RolleCheckerGard)
     @SetMetadata('allow_to_roles', ['user'])
-    async getReceptionById(@Param('id') Id: number):Promise<CarpetReception | ApiResponse> {
-        return await this.carpetReceptionService.getReceptionById(Id)
+    async getReceptionById(@Param('id') Id: number, @Param('userId') userId: number):Promise<CarpetReception | ApiResponse> {
+        return await this.carpetReceptionService.getReceptionById(Id, userId)
+    }
+
+    @Post('getBigistReceptionByUser/:id')
+    @UseGuards(RolleCheckerGard)
+    @SetMetadata('allow_to_roles', ['user'])
+    async getBigistReceptionById(@Param('id') Id: number):Promise<CarpetReception[] | ApiResponse> {
+        return await this.carpetReceptionService.getBigistReceptionForUser(Id);
     }
 }

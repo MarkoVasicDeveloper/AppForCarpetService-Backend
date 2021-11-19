@@ -6,4 +6,5 @@ export class AddCarpetDto {
     price: number
     workerId: number
     deliveryDate: string
+    clientsId: number
 }

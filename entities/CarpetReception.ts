@@ -4,14 +4,12 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Carpet } from "./Carpet";
-import { CarpetImages } from "./CarpetImages";
 import { Clients } from "./Clients";
 
-@Index("fk1", ["clientsId"], {})
+@Index("user_id", ["userId"], {})
+@Index("FK_carpet_reception_clients", ["clientsId"], {})
 @Entity("carpet_reception", { schema: "apiperionica" })
 export class CarpetReception {
   @PrimaryGeneratedColumn({
@@ -21,8 +19,14 @@ export class CarpetReception {
   })
   carpetReception: number;
 
+  @Column("int", { name: "carpet_reception_user", unsigned: true })
+  carpetReceptionUser: number;
+
   @Column("int", { name: "clients_id", unsigned: true, default: () => "'0'" })
   clientsId: number;
+
+  @Column("int", { name: "user_id", unsigned: true, default: () => "'0'" })
+  userId: number;
 
   @Column("int", { name: "worker_id", unsigned: true })
   workerId: number;
@@ -56,14 +60,8 @@ export class CarpetReception {
   @Column("date", { name: "date_at", default: () => "'curdate()'" })
   dateAt: string;
 
-  @OneToMany(() => Carpet, (carpet) => carpet.carpetReception2)
-  carpets: Carpet[];
-
-  @OneToMany(() => CarpetImages, (carpetImages) => carpetImages.carpetReception)
-  carpetImages: CarpetImages[];
-
   @ManyToOne(() => Clients, (clients) => clients.carpetReceptions, {
-    onDelete: "RESTRICT",
+    onDelete: "NO ACTION",
     onUpdate: "CASCADE",
   })
   @JoinColumn([{ name: "clients_id", referencedColumnName: "clientsId" }])

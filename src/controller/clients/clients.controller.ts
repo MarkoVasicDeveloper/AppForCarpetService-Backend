@@ -15,11 +15,11 @@ import { ClientsService } from "src/services/clients/clients.service";
 export class ClientsContoller {
     constructor(private readonly clientService: ClientsService) { }
 
-    @Post('addClient')
+    @Post('addClient/:id')
     @UseGuards(RolleCheckerGard)
     @SetMetadata('allow_to_roles', ['user' , 'administrator'])
-    async addClient(@Body() data: AddClientsDto): Promise <Clients> {
-        return await this.clientService.addClients(data)
+    async addClient(@Body() data: AddClientsDto, @Param('id') userId: number): Promise <Clients> {
+        return await this.clientService.addClients(data, userId)
     }
 
     @Post('editClient/:id')
@@ -29,25 +29,25 @@ export class ClientsContoller {
         return await this.clientService.editClient(data, clientId)
     }
 
-    @Post('getClientByNameSurnameAddress')
+    @Post('getClientByNameSurnameAddress/:id')
     @UseGuards(RolleCheckerGard)
     @SetMetadata('allow_to_roles', ['user'])
-    async getClientByNameSurnameAddress(@Body() data: AddClientsDto):Promise <Clients | ApiResponse>{
-        return await this.clientService.getClientByNameSurnameAddress(data);
+    async getClientByNameSurnameAddress(@Body() data: AddClientsDto, @Param('id') userId: number):Promise <Clients | ApiResponse>{
+        return await this.clientService.getClientByNameSurnameAddress(data, userId);
     }
 
     @Get('getAllClients')
     @UseGuards(RolleCheckerGard)
-    @SetMetadata('allow_to_roles', ['user'])
+    @SetMetadata('allow_to_roles', ['user', 'administrator'])
     async getAllClients ():Promise <Clients[]> {
         return await this.clientService.getAllClients()
     }
 
-    @Get('getClientById/:id')
+    @Get('getClientById/:id/:userId')
     @UseGuards(RolleCheckerGard)
     @SetMetadata('allow_to_roles', ['user'])
-    async getClientById (@Param('id') clientId: number):Promise <Clients | ApiResponse> {
-        return await this.clientService.getClientById(clientId)
+    async getClientById (@Param('id') clientId: number, @Param('userId') userId: number):Promise <Clients | ApiResponse> {
+        return await this.clientService.getClientById(clientId, userId)
     }
 
     @Post('getClientsByName')

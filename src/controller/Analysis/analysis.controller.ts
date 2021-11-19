@@ -9,52 +9,52 @@ import { BuisnessAnalysis } from "src/services/Analysis/BuisnessAnalysis";
 export class AnalysisController{
     constructor(private readonly analysisService: BuisnessAnalysis) {}
 
-    @Get('day')
+    @Get('day/:id')
     @UseGuards(RolleCheckerGard)
-    @SetMetadata('allow_to_roles', ['user'])
-    async getDataForDay():Promise<AnalysisInfo> {
-        return await this.analysisService.getDailyReport();
+    @SetMetadata('allow_to_roles', ['user', 'administrator'])
+    async getDataForDay(@Param('id') userId: number):Promise<AnalysisInfo> {
+        return await this.analysisService.getDailyReport(userId);
     }
 
-    @Get('weekend')
+    @Get('weekend/:id')
     @UseGuards(RolleCheckerGard)
-    @SetMetadata('allow_to_roles', ['user'])
-    async getDataForWeekend():Promise<AnalysisInfo> {
-        return await this.analysisService.theWeeklyReport();
+    @SetMetadata('allow_to_roles', ['user', 'administrator'])
+    async getDataForWeekend(@Param('id') userId: number):Promise<AnalysisInfo> {
+        return await this.analysisService.theWeeklyReport(userId);
     }
 
-    @Get('monthly')
+    @Get('monthly/:id')
     @UseGuards(RolleCheckerGard)
-    @SetMetadata('allow_to_roles', ['user'])
-    async getDataForMonth():Promise<AnalysisInfo> {
-        return await this.analysisService.theMontlyReport();
+    @SetMetadata('allow_to_roles', ['user', 'administrator'])
+    async getDataForMonth(@Param('id') userId: number):Promise<AnalysisInfo> {
+        return await this.analysisService.theMontlyReport(userId);
     }
 
-    @Get('year')
+    @Get('year/:id')
     @UseGuards(RolleCheckerGard)
-    @SetMetadata('allow_to_roles', ['user'])
-    async getDataForYear():Promise<AnalysisInfo> {
-        return await this.analysisService.theYearReport();
+    @SetMetadata('allow_to_roles', ['user', 'administrator'])
+    async getDataForYear(@Param('id') userId: number):Promise<AnalysisInfo> {
+        return await this.analysisService.theYearReport(userId);
     }
 
-    @Get('lastSevenDayReport')
+    @Get('lastSevenDayReport/:id')
     @UseGuards(RolleCheckerGard)
-    @SetMetadata('allow_to_roles', ['user'])
-    async lastSevenDayReport() {
-        return await this.analysisService.lastSevenDayReport();
+    @SetMetadata('allow_to_roles', ['user', 'administrator'])
+    async lastSevenDayReport(@Param('id') userId: number) {
+        return await this.analysisService.lastSevenDayReport(userId);
     }
 
-    @Post('montlyReport/:id')
+    @Post('montlyReport/:id/:userId')
     @UseGuards(RolleCheckerGard)
-    @SetMetadata('allow_to_roles', ['user'])
-    async mondlyReport(@Param('id') id: string) {
-        return await this.analysisService.montryReport(id)
+    @SetMetadata('allow_to_roles', ['user', 'administrator'])
+    async mondlyReport(@Param('id') id: string, @Param('userId') userId: number) {
+        return await this.analysisService.montryReport(id, userId)
     }
 
-    @Get('yearReport/')
+    @Get('yearReport/:id')
     @UseGuards(RolleCheckerGard)
-    @SetMetadata('allow_to_roles', ['user'])
-    async yearReport() {
-        return await this.analysisService.yearReport()
+    @SetMetadata('allow_to_roles', ['user', 'administrator'])
+    async yearReport(@Param('id') userId: number) {
+        return await this.analysisService.yearReport(userId)
     }
 }

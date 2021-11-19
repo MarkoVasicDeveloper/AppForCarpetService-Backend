@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { RefreshToken } from "./RefreshToken";
+import { Subscribers } from "./Subscribers";
 
 @Index("email", ["email"], { unique: true })
 @Entity("user", { schema: "apiperionica" })
@@ -41,4 +42,7 @@ export class User {
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshTokens: RefreshToken[];
+
+  @OneToMany(() => Subscribers, (subscribers) => subscribers.user)
+  subscribers: Subscribers[];
 }

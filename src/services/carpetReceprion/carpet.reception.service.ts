@@ -28,16 +28,24 @@ export class CarpetReceptionsService {
         carpet.note = data.note;
         carpet.clientsId = client.clientsId;
         carpet.workerId = workerId;
+        carpet.carpetReceptionUser = data.carpet_reception_user
+        carpet.userId = data.userId
+        
 
         await this.carpetReception.save(carpet) 
 
         return await this.clientsService.findOne(client.clientsId, {
-            relations: ['carpetReceptions', 'carpetReceptions.carpetImages']
+            relations: ['carpetReceptions']
         })
     }
 
-    async editCarpetReception (data: EditCarpetReception, workerId: number): Promise <CarpetReception | ApiResponse> {
-        const carpetReception = await this.carpetReception.findOne(data.carpetReceptionId)
+    async editCarpetReception (data: EditCarpetReception, workerId: number, userId: number): Promise <CarpetReception | ApiResponse> {
+        const carpetReception = await this.carpetReception.findOne({
+            where: {
+                carpetReceptionUser: data.carpetReceptionId,
+                userId: userId
+            }
+        })
 
         if (!carpetReception) {
             return new ApiResponse('error', -5001, 'Reception is not found')
@@ -74,10 +82,11 @@ export class CarpetReceptionsService {
         return editCarpetReception;
     }
 
-    async getAllReceptionByuser(clientsId: number):Promise<CarpetReception[] | ApiResponse> {
+    async getAllReceptionByuser(clientsId: number, userId: number):Promise<CarpetReception[] | ApiResponse> {
         const allReceptions = await this.carpetReception.find({
             where: {
-                clientsId: clientsId
+                clientsId: clientsId,
+                userId: userId
             },
             order: {
                 timeAt: 'ASC'
@@ -91,13 +100,38 @@ export class CarpetReceptionsService {
         return allReceptions;
     }
 
-    async getReceptionById(id: number):Promise <CarpetReception | ApiResponse> {
-        const carpetReception = await this.carpetReception.findOne(id);
+    async getReceptionById(id: number, userId: number):Promise <CarpetReception | ApiResponse> {
+        const carpetReception = await this.carpetReception.findOne({
+            where: {
+                carpetReceptionUser: id,
+                userId: userId
+            }
+        });
 
         if(!carpetReception) {
             return new ApiResponse('error', -5001, 'Reception is not found')
         }
 
-        return carpetReception;
+        return await this.carpetReception.findOne(carpetReception.carpetReception, {
+            relations: ['clients']
+        });
+    }
+
+    async getBigistReceptionForUser(id: number):Promise<CarpetReception[] | ApiResponse>{
+        const reception = await this.carpetReception.find({
+            where: {
+                userId: id
+            },
+            order: {
+                carpetReceptionUser: 'DESC'
+            },
+            take: 1
+        })
+
+        if(!reception) {
+            new ApiResponse('error', -5005, 'Reception for that user not found')
+        }
+
+        return reception;
     }
 }

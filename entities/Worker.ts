@@ -16,4 +16,7 @@ export class Worker {
 
   @Column("varchar", { name: "password", length: 255, default: () => "'0'" })
   password: string;
+
+  @Column("int", { name: "userId", unsigned: true })
+  userId: number;
 }

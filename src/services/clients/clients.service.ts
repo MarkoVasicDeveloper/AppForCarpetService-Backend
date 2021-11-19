@@ -15,13 +15,14 @@ import { Repository } from "typeorm";
 export class ClientsService {
     constructor(@InjectRepository(Clients) private readonly clientsService: Repository<Clients>) { }
 
-    async addClients (data: AddClientsDto):Promise<Clients> {
+    async addClients (data: AddClientsDto, userId: number):Promise<Clients> {
         
         const existingClient = await this.clientsService.findOne({
             where: {
                 name: data.name,
                 surname: data.surname,
-                address: data.address
+                address: data.address,
+                userId: userId
             }
         })
 
@@ -33,6 +34,7 @@ export class ClientsService {
         clients.name = data.name;
         clients.surname = data.surname;
         clients.address = data.address;
+        clients.userId = userId
 
         const savedClient = await this.clientsService.save(clients);
 
@@ -65,12 +67,13 @@ export class ClientsService {
         return savedClient;
     }
 
-    async getClientByNameSurnameAddress(data: AddClientsDto):Promise <Clients | ApiResponse> {
+    async getClientByNameSurnameAddress(data: AddClientsDto, userId: number):Promise <Clients | ApiResponse> {
         const client = await this.clientsService.findOne({
             where: {
                 name: data.name,
                 surname: data.surname,
-                address: data.address
+                address: data.address,
+                userId: userId
             }
         })
 
@@ -85,16 +88,19 @@ export class ClientsService {
         return await this.clientsService.find()
     }
 
-    async getClientById (clientId: number):Promise <Clients | ApiResponse> {
-        const client = await this.clientsService.findOne(clientId);
+    async getClientById (clientId: number, userId: number):Promise <Clients | ApiResponse> {
+        const client = await this.clientsService.findOne({
+            where: {
+                clientsId: clientId,
+                userId: userId
+            }
+        });
 
         if (!client) {
             return new ApiResponse('error', -4001, 'Client is not found');
         }
 
-        return await this.clientsService.findOne(client.clientsId, {
-            relations: ['carpetReceptions', 'carpetReceptions.carpetImages', 'carpetReceptions.carpets']
-        });
+        return await this.clientsService.findOne(client.clientsId);
     }
 
     async getClientByName (data: GetClientByNameDto):Promise<Clients | ApiResponse> {
@@ -109,7 +115,7 @@ export class ClientsService {
         }
 
         return await this.clientsService.findOne(client.clientsId, {
-            relations: ['carpetReceptions', 'carpetReceptions.carpetImages']
+            relations: ['carpetReceptions']
         });
     }
 
@@ -125,7 +131,7 @@ export class ClientsService {
         }
 
         return await this.clientsService.findOne(client.clientsId, {
-            relations: ['carpetReceptions', 'clients.carpetReceptions.carpetImages']
+            relations: ['carpetReceptions']
         });
     }
 
@@ -141,7 +147,7 @@ export class ClientsService {
         }
 
         return await this.clientsService.findOne(client.clientsId, {
-            relations: ['carpetReceptions', 'carpetReceptions.carpetImages']
+            relations: ['carpetReceptions']
         });
     }
 
