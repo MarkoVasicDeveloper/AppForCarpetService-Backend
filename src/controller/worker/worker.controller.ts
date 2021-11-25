@@ -11,19 +11,19 @@ import { WorkerService } from "src/services/worker/workers.service";
 export class WorkerController {
     constructor(private readonly workerService: WorkerService) { }
 
-    @Post('addWorker')
-    async addWorker (@Body() data: AddWorkerDto): Promise<Worker | ApiResponse> {
-        return await this.workerService.addWorker(data)
+    @Post('addWorker/:userId')
+    async addWorker (@Body() data: AddWorkerDto, @Param('userId') userId: number): Promise<Worker | ApiResponse> {
+        return await this.workerService.addWorker(data, userId)
     }
 
-    @Post('editWorker')
-    async editWorker (@Body() data: EditWorkerDto): Promise<Worker | ApiResponse> {
-        return await this.workerService.editWorker(data)
+    @Post('editWorker/:userId')
+    async editWorker (@Body() data: EditWorkerDto, @Param('userId') userId: number): Promise<Worker | ApiResponse> {
+        return await this.workerService.editWorker(data, userId)
     }
 
-    @Post('findWorker')
-    async findWorker (@Body() data: AddWorkerDto):Promise<Worker | ApiResponse> {
-        return await this.workerService.findWorker(data)
+    @Post('findWorker/:userId')
+    async findWorker (@Body() data: AddWorkerDto, @Param('userId') userId: number):Promise<Worker | ApiResponse> {
+        return await this.workerService.findWorker(data, userId)
     }
 
     @Get(':id/:userId')

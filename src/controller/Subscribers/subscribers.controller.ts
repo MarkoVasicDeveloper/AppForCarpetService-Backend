@@ -12,14 +12,14 @@ export class SubscribersController {
     constructor(private readonly subscriberService: SubscibersService) {}
 
     @Post('add')
-    @SetMetadata('allow_to_roles', ['administrator'])
+    @SetMetadata('allow_to_roles', ['user', 'administrator' ])
     @UseGuards(RolleCheckerGard)
     async addSubscriber(@Body() data: AddSubscribersDto):Promise <Subscribers | ApiResponse> {
         return await this.subscriberService.addSubscriber(data)
     }
 
     @Get('/:id')
-    @SetMetadata('allow_to_roles', ['administrator'])
+    @SetMetadata('allow_to_roles', ['user', 'administrator'])
     @UseGuards(RolleCheckerGard)
     async findByUserId(@Param('id') userId: number):Promise <Subscribers[]> {
         return await this.subscriberService.findByUserId(userId)

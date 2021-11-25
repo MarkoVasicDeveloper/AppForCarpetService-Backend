@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, Param, Post, SetMetadata, UseGuards } from "@nestjs/common";
+import { MailerDto } from "dto/mailer/mailer.dto";
 import { AddUserDto } from "dto/user/add.user.dto";
 import { DeleteUserByAdminDto } from "dto/user/delete.user.by.admin.dto";
 import { DeleteUserDto } from "dto/user/delete.user.dto";
@@ -8,15 +9,36 @@ import { UserEmailDto } from "dto/user/user.emai.dto";
 import { User } from "entities/User";
 import { ApiResponse } from "src/misc/api.restonse";
 import { RolleCheckerGard } from "src/rollecheckergard/rolle.checker.gatd";
+import { UserMailerService } from "src/services/mailer/mailer.service";
 import { UserService } from "src/services/user/user.service";
 
 @Controller('api/user')
 
 export class UserController {
-    constructor(private readonly userService: UserService) {}
+    constructor(private readonly userService: UserService,
+                private readonly mailerService: UserMailerService) {}
 
     @Post('addUser')
     async addUser (@Body() data: AddUserDto):Promise <User | ApiResponse> {
+        const conntent: MailerDto = new MailerDto();
+        conntent.email = data.email;
+        conntent.text = `<div style = 'text-align: center'>
+                            <h1 style = "color: #fec400">Dobro dosli</h1>
+                            <p style = 'margin-bottom: 1rem'>
+                                Poklanjamo Vam 15 dana besplatnog koriscenja sofrvera
+                                u zelji da se sto bolje upoznate sa prednostima koje
+                                koriscenje Washer softvera donosi za Vas posao.
+                                Drago nam je da saradjujemo sa nekim ko se trudi da
+                                unapredi svoj posao!
+                            </p> 
+                            <p>
+                                Klikom na ovaj link <a href = 'http://localhost:4000/#/login'>
+                                    Log In
+                                </a> idete na stranucu za logovanje. Unesite vasu lozinku i email.
+                                
+                            </p>               
+                        </div>`
+        await this.mailerService.sendEmail(conntent)
         return await this.userService.addUser(data)
     }
 

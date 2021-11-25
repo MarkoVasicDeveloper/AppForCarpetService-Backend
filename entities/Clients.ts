@@ -32,6 +32,9 @@ export class Clients {
   @Column("int", { name: "user_id", unsigned: true, default: () => "'0'" })
   userId: number;
 
+  @Column("varchar", { name: "phone", nullable: true, length: 50 })
+  phone: string | null;
+
   @OneToMany(
     () => CarpetReception,
     (carpetReception) => carpetReception.clients

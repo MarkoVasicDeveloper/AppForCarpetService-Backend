@@ -34,7 +34,8 @@ export class ClientsService {
         clients.name = data.name;
         clients.surname = data.surname;
         clients.address = data.address;
-        clients.userId = userId
+        clients.userId = userId;
+        clients.phone = data.phone
 
         const savedClient = await this.clientsService.save(clients);
 
@@ -60,6 +61,10 @@ export class ClientsService {
 
         if(data.address) {
             client.address = data.address;
+        }
+
+        if(data.phone) {
+            client.phone = data.phone;
         }
 
         const savedClient = await this.clientsService.save(client);

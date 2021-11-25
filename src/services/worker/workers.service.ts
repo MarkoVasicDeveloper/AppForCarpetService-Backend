@@ -13,10 +13,11 @@ import { EditWorkerDto } from "dto/worker/edit.worker.dto";
 export class WorkerService {
     constructor(@InjectRepository(Worker) private readonly workerService: Repository<Worker>) { }
 
-    async addWorker (data: AddWorkerDto): Promise <Worker | ApiResponse> {
+    async addWorker (data: AddWorkerDto, userId: number): Promise <Worker | ApiResponse> {
         try {
             const worker = new Worker();
             worker.name = data.name;
+            worker.userId = userId
 
             const passwordHash = crypto.createHash('sha512');
             passwordHash.update(data.password);
@@ -32,10 +33,11 @@ export class WorkerService {
         }
     }
 
-    async editWorker (data: EditWorkerDto): Promise <Worker | ApiResponse> {
+    async editWorker (data: EditWorkerDto, userId: number): Promise <Worker | ApiResponse> {
         const worker = await this.workerService.findOne({
             where: {
-                name: data.name
+                name: data.name,
+                userId: userId
             }
         })
 
@@ -65,10 +67,11 @@ export class WorkerService {
         return worker;
     }
 
-    async findWorker (data: AddWorkerDto):Promise<Worker | ApiResponse> {
+    async findWorker (data: AddWorkerDto, userId: number):Promise<Worker | ApiResponse> {
         const worker = await this.workerService.findOne({
             where: {
-                name: data.name
+                name: data.name,
+                userId: userId
             }
         })
 
