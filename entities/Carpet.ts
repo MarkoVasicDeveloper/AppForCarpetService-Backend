@@ -36,8 +36,8 @@ export class Carpet {
   @Column("date", { name: "deliveryTime" })
   deliveryTime: string;
 
-  @Column("date", { name: "time_at", default: () => "'curdate()'" })
-  timeAt: string;
+  @Column("timestamp", { name: "time_at", default: () => "CURRENT_TIMESTAMP" })
+  timeAt: Date;
 
   @Column("int", { name: "userId", unsigned: true })
   userId: number;

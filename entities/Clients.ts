@@ -26,8 +26,8 @@ export class Clients {
   @Column("varchar", { name: "address", length: 50, default: () => "'0'" })
   address: string;
 
-  @Column("date", { name: "time_at", default: () => "'curdate()'" })
-  timeAt: string;
+  @Column("timestamp", { name: "time_at", default: () => "CURRENT_TIMESTAMP" })
+  timeAt: Date;
 
   @Column("int", { name: "user_id", unsigned: true, default: () => "'0'" })
   userId: number;

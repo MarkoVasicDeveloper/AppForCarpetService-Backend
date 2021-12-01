@@ -16,20 +16,20 @@ export class BuisnessAnalysis {
     ) { }
 
     async getDailyReport(userId: number):Promise<AnalysisInfo> {
-        const date = new Date().toISOString().split('T')[0]
+        const date = new Date().toISOString().substr(0, 10) + ' 00:00:00'
         
         const allClient = await this.clientsService.find({
             where: {
-                timeAt: date,
+                timeAt: MoreThan(date),
                 userId: userId
             }
         })
-
+        
         const numberOfClients = allClient.length
 
         const allReceptions = await this.carpetReceptionService.find({
             where: {
-                dateAt: new Date().toISOString().split('T')[0],
+                dateAt: MoreThan(date),
                 userId: userId
             }
         })
@@ -43,7 +43,7 @@ export class BuisnessAnalysis {
 
         const allCarpet = await this.carpetService.find({
             where: {
-                timeAt: new Date().toISOString().split('T')[0],
+                timeAt: MoreThan(date),
                 userId: userId
             }
         })
@@ -71,7 +71,7 @@ export class BuisnessAnalysis {
         
         const allClient = await this.clientsService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                timeAt: MoreThan(d.toISOString().substr(0, 19).replace('T', ' ')),
                 userId: userId
             }
         })
@@ -80,7 +80,7 @@ export class BuisnessAnalysis {
 
         const allReceptions = await this.carpetReceptionService.find({
             where: {
-                dateAt: MoreThan(d.toISOString().split('T')[0]),
+                dateAt: MoreThan(d.toISOString().substr(0, 19).replace('T', ' ')),
                 userId: userId
             }
         })
@@ -94,7 +94,7 @@ export class BuisnessAnalysis {
 
         const allCarpet = await this.carpetService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                timeAt: MoreThan(d.toISOString().substr(0, 19).replace('T', ' ')),
                 userId: userId
             }
         })
@@ -122,7 +122,7 @@ export class BuisnessAnalysis {
         
         const allClient = await this.clientsService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                timeAt: MoreThan(d.toISOString().substring(0 , 10) + ' 00:00:00'),
                 userId: userId
             }
         })
@@ -131,7 +131,7 @@ export class BuisnessAnalysis {
 
         const allReceptions = await this.carpetReceptionService.find({
             where: {
-                dateAt: MoreThan(d.toISOString().split('T')[0]),
+                dateAt: MoreThan(d.toISOString().substring(0 , 10) + ' 00:00:00'),
                 userId: userId
             }
         })
@@ -145,7 +145,7 @@ export class BuisnessAnalysis {
 
         const allCarpet = await this.carpetService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                timeAt: MoreThan(d.toISOString().substring(0 , 10) + ' 00:00:00'),
                 userId: userId
             }
         })
@@ -173,7 +173,7 @@ export class BuisnessAnalysis {
         
         const allClient = await this.clientsService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                timeAt: MoreThan(d.toISOString()),
                 userId: userID
             }
         })
@@ -182,7 +182,7 @@ export class BuisnessAnalysis {
 
         const allReceptions = await this.carpetReceptionService.find({
             where: {
-                dateAt: MoreThan(d.toISOString().split('T')[0]),
+                dateAt: MoreThan(d.toISOString()),
                 userId: userID
             }
         })
@@ -196,7 +196,7 @@ export class BuisnessAnalysis {
 
         const allCarpet = await this.carpetService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                timeAt: MoreThan(d.toISOString()),
                 userId: userID
             }
         })
@@ -224,18 +224,19 @@ export class BuisnessAnalysis {
 
         const allClient = await this.clientsService.find({
             where: {
-                timeAt: MoreThan(d.toISOString().split('T')[0]),
+                timeAt: MoreThan(d.toISOString()),
                 userId: userId
             },
             order: {
                 timeAt: 'DESC'
             }
         })
+
         const dataLastDate = []
         d.setDate(d.getDate()+7)
 
         const timeAt = allClient.map(client => {
-            return (client.timeAt)
+            return (client.timeAt.toISOString().split('T')[0])
         })
 
         for(const time of timeAt) {
@@ -314,7 +315,7 @@ export class BuisnessAnalysis {
         const receptionLastDay = [];
         t.setDate(t.getDate()+7);
         for(const one of allReceptions) {
-            if(one.dateAt === t.toISOString().split('T')[0]){
+            if(one.dateAt.toISOString().split('T')[0] === t.toISOString().split('T')[0]){
                 receptionLastDay.push(one.numberOfCarpet + one.numberOfTracks)
             }
         }
@@ -322,7 +323,7 @@ export class BuisnessAnalysis {
         const receptionTwoDay = [];
         t.setDate(t.getDate()-1);
         for(const one of allReceptions) {
-            if(one.dateAt === t.toISOString().split('T')[0]){
+            if(one.dateAt.toISOString().split('T')[0] === t.toISOString().split('T')[0]){
                 receptionTwoDay.push(one.numberOfCarpet + one.numberOfTracks)
             }
         }
@@ -330,7 +331,7 @@ export class BuisnessAnalysis {
         const receptionTreeDay = [];
         t.setDate(t.getDate()-1);
         for(const one of allReceptions) {
-            if(one.dateAt === t.toISOString().split('T')[0]){
+            if(one.dateAt.toISOString().split('T')[0] === t.toISOString().split('T')[0]){
                 receptionTreeDay.push(one.numberOfCarpet + one.numberOfTracks)
             }
         }
@@ -338,7 +339,7 @@ export class BuisnessAnalysis {
         const receptionFourDay = [];
         t.setDate(t.getDate()-1);
         for(const one of allReceptions) {
-            if(one.dateAt === t.toISOString().split('T')[0]){
+            if(one.dateAt.toISOString().split('T')[0] === t.toISOString().split('T')[0]){
                 receptionFourDay.push(one.numberOfCarpet + one.numberOfTracks)
             }
         }
@@ -346,7 +347,7 @@ export class BuisnessAnalysis {
         const receptionFifthDay = [];
         t.setDate(t.getDate()-1);
         for(const one of allReceptions) {
-            if(one.dateAt === t.toISOString().split('T')[0]){
+            if(one.dateAt.toISOString().split('T')[0] === t.toISOString().split('T')[0]){
                 receptionFifthDay.push(one.numberOfCarpet + one.numberOfTracks)
             }
         }
@@ -354,7 +355,7 @@ export class BuisnessAnalysis {
         const receptionSixDay = [];
         t.setDate(t.getDate()-1);
         for(const one of allReceptions) {
-            if(one.dateAt === t.toISOString().split('T')[0]){
+            if(one.dateAt === t){
                 receptionSixDay.push(one.numberOfCarpet + one.numberOfTracks)
             }
         }
@@ -362,7 +363,7 @@ export class BuisnessAnalysis {
         const receptionSevenDay = [];
         t.setDate(t.getDate()-1);
         for(const one of allReceptions) {
-            if(one.dateAt === t.toISOString().split('T')[0]){
+            if(one.dateAt.toISOString().split('T')[0] === t.toISOString().split('T')[0]){
                 receptionSevenDay.push(one.numberOfCarpet + one.numberOfTracks)
             }
         }
@@ -372,7 +373,7 @@ export class BuisnessAnalysis {
 
         const allCarpet = await this.carpetService.find({
             where: {
-                timeAt: MoreThan(dt.toISOString().split('T')[0]),
+                timeAt: MoreThan(dt.toISOString()),
                 userId: userId
             },
             order: {
@@ -385,7 +386,7 @@ export class BuisnessAnalysis {
         dt.setDate(dt.getDate()+7);
 
         for(const one of allCarpet) {
-            if(one.timeAt === dt.toISOString().split('T')[0]){
+            if(one.timeAt.toISOString().split('T')[0] === dt.toISOString().split('T')[0]){
                 carpetLastDayPay.push(one.forPayment)
                 carpetLastDaySurface.push(one.carpetSurface)
             }
@@ -396,7 +397,7 @@ export class BuisnessAnalysis {
         dt.setDate(dt.getDate()-1);
         
         for(const one of allCarpet) {
-            if(one.timeAt === dt.toISOString().split('T')[0]){
+            if(one.timeAt.toISOString().split('T')[0] === dt.toISOString().split('T')[0]){
                 carpetTwoDayPay.push(one.forPayment)
                 carpetTwoDaySurface.push(one.carpetSurface)
             }
@@ -407,7 +408,7 @@ export class BuisnessAnalysis {
         dt.setDate(dt.getDate()-1);
         
         for(const one of allCarpet) {
-            if(one.timeAt === dt.toISOString().split('T')[0]){
+            if(one.timeAt.toISOString().split('T')[0] === dt.toISOString().split('T')[0]){
                 carpetTreeDayPay.push(one.forPayment)
                 carpetTreeDaySurface.push(one.carpetSurface)
             }
@@ -418,7 +419,7 @@ export class BuisnessAnalysis {
         dt.setDate(dt.getDate()-1);
         
         for(const one of allCarpet) {
-            if(one.timeAt === dt.toISOString().split('T')[0]){
+            if(one.timeAt.toISOString().split('T')[0] === dt.toISOString().split('T')[0]){
                 carpetFourDayPay.push(one.forPayment)
                 carpetFourDaySurface.push(one.carpetSurface)
             }
@@ -429,7 +430,7 @@ export class BuisnessAnalysis {
         dt.setDate(dt.getDate()-1);
         
         for(const one of allCarpet) {
-            if(one.timeAt === dt.toISOString().split('T')[0]){
+            if(one.timeAt.toISOString().split('T')[0] === dt.toISOString().split('T')[0]){
                 carpetFifthDayPay.push(one.forPayment)
                 carpetFifthDaySurface.push(one.carpetSurface)
             }
@@ -440,7 +441,7 @@ export class BuisnessAnalysis {
         dt.setDate(dt.getDate()-1);
         
         for(const one of allCarpet) {
-            if(one.timeAt === dt.toISOString().split('T')[0]){
+            if(one.timeAt.toISOString().split('T')[0] === dt.toISOString().split('T')[0]){
                 carpetSixDayPay.push(one.forPayment)
                 carpetSixDaySurface.push(one.carpetSurface)
             }
@@ -451,7 +452,7 @@ export class BuisnessAnalysis {
         dt.setDate(dt.getDate()-1);
         
         for(const one of allCarpet) {
-            if(one.timeAt === dt.toISOString().split('T')[0]){
+            if(one.timeAt.toISOString().split('T')[0] === dt.toISOString().split('T')[0]){
                 carpetSevenDayPay.push(one.forPayment)
                 carpetSevenDaySurface.push(one.carpetSurface)
             }
@@ -506,10 +507,16 @@ export class BuisnessAnalysis {
         
         const allClient = await this.clientsService.find({
             where: {
-                timeAt: MoreThanOrEqual(d.toISOString().split('T')[0]) && LessThanOrEqual(data),//d.toISOString().split('T')[0]
+                timeAt: MoreThanOrEqual(d.toISOString().substring(0 , 10) + ' 00:00:00') && LessThanOrEqual(data + ' 23:59:00'),//d.toISOString().split('T')[0]
                 userId: userId
             }
         })
+        
+        const modifyClients = []
+        for (const client of allClient) {
+            client.timeAt = client.timeAt.toISOString().split('T')[0] as any
+            modifyClients.push(client)
+        }
 
         function groupBy(objectArray: any[], property: string | number) {
             return objectArray.reduce(function (acc, obj) {
@@ -522,14 +529,15 @@ export class BuisnessAnalysis {
             }, [])
           }
 
-        const groupedPeople = groupBy(allClient, 'timeAt')
-
+        const groupedPeople = groupBy(modifyClients, 'timeAt')
+          
         const da = new Date(data);
         da.setDate(da.getDate() - 30);// Return 30 days back in ISOstring format
+        
 
         const time = []
 
-        function arrayOfDate(date, numberOfDays) {
+        function arrayOfDate(date: string | number | Date, numberOfDays: number) {
             for(let i=0; i<numberOfDays; i++) {
                 const da = new Date(date);
                 da.setDate(da.getDate() - i)
@@ -540,23 +548,29 @@ export class BuisnessAnalysis {
 
         const finallyArrClients = [];
         for (const timeDate of time){
-            if(groupedPeople[timeDate]) {
+            if(groupedPeople[timeDate.toString()]) {
                 finallyArrClients.push({
                     time: timeDate,
                     number: groupedPeople[timeDate].length
                 })
             }
-            
         }
         
         const allReceptions = await this.carpetReceptionService.find({
             where: {
-                timeAt: MoreThanOrEqual(d.toISOString().split('T')[0]) && LessThanOrEqual(data),//d.toISOString().split('T')[0]
+                timeAt: MoreThanOrEqual(d.toISOString().substring(0 , 10) + ' 00:00:00') && LessThanOrEqual(data + ' 23:59:00'),//d.toISOString().split('T')[0]
                 userId: userId
             }
         })
 
-        const groupedReception = groupBy(allReceptions, 'dateAt')
+        
+        const modifyReception = []
+        for (const reception of allReceptions) {
+            reception.dateAt = reception.dateAt.toISOString().split('T')[0] as any
+            modifyReception.push(reception)
+        }
+
+        const groupedReception = groupBy(modifyReception, 'dateAt')
 
         const finallyArrReceptions = [];
         for (const timeDate of time){
@@ -574,12 +588,17 @@ export class BuisnessAnalysis {
 
         const allCarpet = await this.carpetService.find({
             where: {
-                timeAt: MoreThanOrEqual(d.toISOString().split('T')[0]) && LessThanOrEqual(data),//d.toISOString().split('T')[0]
+                timeAt: MoreThanOrEqual(d.toISOString().substring(0 , 10) + ' 00:00:00') && LessThanOrEqual(data + ' 23:59:00'),//d.toISOString().split('T')[0]
                 userId: userId
             }
         })
-
-        const grupedCarpet = groupBy(allCarpet, 'timeAt')
+        const modifyCarpet = []
+        for (const carpet of allCarpet) {
+            carpet.timeAt = carpet.timeAt.toISOString().split('T')[0] as any
+            modifyCarpet.push(carpet)
+        }
+        
+        const grupedCarpet = groupBy(modifyCarpet, 'timeAt')
 
         const finallyArrCarpetSurface = [];
         const finallyArrCarpetPay = [];
@@ -619,7 +638,7 @@ export class BuisnessAnalysis {
     }
 
     async yearReport(userId: number) {
-        //concatination all clients, carpet, surface and forPay and return for all monts
+        // concatination all clients, carpet, surface and forPay and return for all monts
         const january = await this.montryReport('2021-1-31', userId)
         const february = await this.montryReport('2021-2-28', userId)
         const march = await this.montryReport('2021-3-31', userId)

@@ -21,8 +21,8 @@ export class Subscribers {
   @Column("int", { name: "user_id", unsigned: true, default: () => "'0'" })
   userId: number;
 
-  @Column("date", { name: "time_at", default: () => "'curdate()'" })
-  timeAt: string;
+  @Column("timestamp", { name: "time_at", default: () => "CURRENT_TIMESTAMP" })
+  timeAt: Date;
 
   @Column("date", { name: "expire_at" })
   expireAt: string;

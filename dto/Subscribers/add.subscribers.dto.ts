@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 export class AddSubscribersDto {
     userId: number
-    timeAt: string
+    timeAt: Date
     expireAt: string
     price: number
 }

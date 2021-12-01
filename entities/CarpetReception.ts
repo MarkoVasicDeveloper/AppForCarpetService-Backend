@@ -57,8 +57,8 @@ export class CarpetReception {
   @Column("datetime", { name: "deliveryTime", nullable: true })
   deliveryTime: Date | null;
 
-  @Column("date", { name: "date_at", default: () => "'curdate()'" })
-  dateAt: string;
+  @Column("timestamp", { name: "date_at", default: () => "CURRENT_TIMESTAMP" })
+  dateAt: Date;
 
   @ManyToOne(() => Clients, (clients) => clients.carpetReceptions, {
     onDelete: "NO ACTION",
