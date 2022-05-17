@@ -8,8 +8,8 @@ import {
 } from "typeorm";
 import { Clients } from "./Clients";
 
-@Index("FK_carpet_reception_clients", ["clientsId"], {})
 @Index("user_id", ["userId"], {})
+@Index("FK_carpet_reception_clients", ["clientsId"], {})
 @Entity("carpet_reception", { schema: "apiperionica" })
 export class CarpetReception {
   @PrimaryGeneratedColumn({
