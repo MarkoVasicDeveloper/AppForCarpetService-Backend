@@ -57,4 +57,18 @@ export class CostService {
       },
     });
   }
+
+  async getAllCostsBySupplier(
+    costsId: number,
+    userId: number,
+    supplierId: number
+  ): Promise<Cost[]> {
+    return await this.costService.find({
+      where: {
+        userId: userId,
+        costsId: costsId,
+        suppliersId: supplierId,
+      },
+    });
+  }
 }

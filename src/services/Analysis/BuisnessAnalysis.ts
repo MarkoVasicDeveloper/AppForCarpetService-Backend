@@ -151,7 +151,7 @@ export class BuisnessAnalysis {
 
   async montryReport(userId: number, data?: string) {
     const d = new Date();
-    d.setDate(d.getDate() - 30); // Return 30 days back in ISOstring format
+    d.setDate(d.getDate() - 30);
     if (!data) data = new Date().toISOString().substring(0, 10);
 
     const allClient = await this.clientsService.find({
@@ -162,14 +162,14 @@ export class BuisnessAnalysis {
         userId: userId,
       },
     });
-
+    console.log(allClient);
     const clientsLastMonth = ClientsReport(allClient);
 
     const allReceptions = await this.carpetReceptionService.find({
       where: {
         timeAt:
           MoreThanOrEqual(d.toISOString().substring(0, 10) + " 00:00:00") &&
-          LessThanOrEqual(data + " 23:59:00"), //d.toISOString().split('T')[0]
+          LessThanOrEqual(data + " 23:59:00"),
         userId: userId,
       },
     });
@@ -180,7 +180,7 @@ export class BuisnessAnalysis {
       where: {
         timeAt:
           MoreThanOrEqual(d.toISOString().substring(0, 10) + " 00:00:00") &&
-          LessThanOrEqual(data + " 23:59:00"), //d.toISOString().split('T')[0]
+          LessThanOrEqual(data + " 23:59:00"),
         userId: userId,
       },
     });
@@ -195,10 +195,11 @@ export class BuisnessAnalysis {
   }
 
   async yearReport(userId: number) {
+    console.log(userId);
     // concatination all clients, carpet, surface and forPay and return for all monts
     const d = new Date();
     const m = d.getMonth();
-    const y = d.getFullYear(); //current year
+    const y = d.getFullYear();
     const months = [];
     for (let i = 0; i < 12; i++) {
       const month = new Date(y, m - i, +1).toISOString().split("T")[0];

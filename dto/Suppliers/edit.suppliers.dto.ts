@@ -2,7 +2,7 @@
 export class EditSuppliersDto {
   name?: string;
   address?: string;
-  pib?: number;
+  pib?: string;
   bankAccaunt?: number;
   costsId?: number;
 }

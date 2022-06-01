@@ -44,6 +44,12 @@ import { CostService } from "src/services/Cost/cost.service";
 import { Suppliers } from "entities/Suppliers";
 import { SuppliersController } from "src/controller/Suppliers/suppliers.controller";
 import { SuppliersService } from "src/services/Suppliers/suppliers.service";
+import { Income } from "entities/Income";
+import { IncomeController } from "src/controller/Income/income.controller";
+import { IncomeService } from "src/services/Income/Income";
+import { AddNewIncomeService } from "src/services/AddNewIncome/addNewIncome.service";
+import { AddNewIncome } from "entities/AddNewIncome";
+import { AddNewIncomeController } from "src/controller/AddNewIncome/add.new.income.controller";
 
 @Module({
   imports: [
@@ -68,6 +74,8 @@ import { SuppliersService } from "src/services/Suppliers/suppliers.service";
         Costs,
         Cost,
         Suppliers,
+        Income,
+        AddNewIncome
       ],
     }),
     TypeOrmModule.forFeature([
@@ -84,6 +92,8 @@ import { SuppliersService } from "src/services/Suppliers/suppliers.service";
       Costs,
       Cost,
       Suppliers,
+      Income,
+      AddNewIncome
     ]),
   ],
   controllers: [
@@ -102,6 +112,8 @@ import { SuppliersService } from "src/services/Suppliers/suppliers.service";
     CostsController,
     CostController,
     SuppliersController,
+    IncomeController,
+    AddNewIncomeController
   ],
   providers: [
     AdministratorService,
@@ -118,6 +130,8 @@ import { SuppliersService } from "src/services/Suppliers/suppliers.service";
     CostsService,
     CostService,
     SuppliersService,
+    IncomeService,
+    AddNewIncomeService
   ],
 })
 export class AppModule implements NestModule {

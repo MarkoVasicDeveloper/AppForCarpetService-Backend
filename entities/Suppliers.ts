@@ -18,8 +18,8 @@ export class Suppliers {
   @Column("varchar", { name: "address", nullable: true, length: 50 })
   address: string | null;
 
-  @Column("int", { name: "pib", nullable: true, unique: true })
-  pib: number | null;
+  @Column("varchar", { name: "pib", nullable: true, unique: true, length: 50 })
+  pib: string | null;
 
   @Column("int", { name: "bank_account", nullable: true })
   bankAccount: number | null;

@@ -23,6 +23,7 @@ export class SuppliersService {
       where: {
         userId: userId,
         costsId: costsId,
+        name: data.name,
       },
     });
 
@@ -68,7 +69,7 @@ export class SuppliersService {
     return await this.suppliersService.find({
       where: {
         userId: userId,
-        suppliersId: costsId,
+        costsId: costsId,
       },
     });
   }

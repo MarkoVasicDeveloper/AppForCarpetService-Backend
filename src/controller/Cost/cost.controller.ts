@@ -48,4 +48,19 @@ export class CostController {
   ): Promise<Cost[]> {
     return await this.costService.getAllCosts(costId, userId);
   }
+
+  @Get("getAllCostsBySupplier/:costid/:supplierId/:id")
+  @UseGuards(RolleCheckerGard)
+  @SetMetadata("allow_to_roles", ["user", "administrator"])
+  async getAllCostsBySupplier(
+    @Param("id") userId: number,
+    @Param("costid") costId: number,
+    @Param("supplierId") supplierId: number
+  ): Promise<Cost[]> {
+    return await this.costService.getAllCostsBySupplier(
+      costId,
+      userId,
+      supplierId
+    );
+  }
 }
