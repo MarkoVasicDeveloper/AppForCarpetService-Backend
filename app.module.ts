@@ -1,144 +1,60 @@
-/* eslint-disable prettier/prettier */
-import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
-import { Administrator } from "entities/Administrator";
-import { Carpet } from "entities/Carpet";
-import { CarpetReception } from "entities/CarpetReception";
-import { Clients } from "entities/Clients";
-import { RefreshAdministratorToken } from "entities/RefreshAdministratorToken";
-import { RefreshToken } from "entities/RefreshToken";
-import { SchedulingCarpet } from "entities/SchedulingCarpet";
-import { Subscribers } from "entities/Subscribers";
-import { User } from "entities/User";
-import { Worker } from "entities/Worker";
-import { AuthMiddleware } from "src/authMiddleware/auth.middleware";
-import { AdministratorController } from "src/controller/administrator/administrator.controller";
-import { AnalysisController } from "src/controller/Analysis/analysis.controller";
-import { AuthController } from "src/controller/auth/auth.controller";
-import { CarpetController } from "src/controller/Carpet/carpet.controller";
-import { CarpetReceprionController } from "src/controller/carpetReceptions/carpet.reception.controller";
-import { ClientsContoller } from "src/controller/clients/clients.controller";
-import { RefreshTokenController } from "src/controller/refreshToken/Refresh.toke.controller";
-import SchedulingCarpetController from "src/controller/Scheduling.Carpet/Scheduking.carpet.controller";
-import { SubscribersController } from "src/controller/Subscribers/subscribers.controller";
-import { UserController } from "src/controller/user/user.controller";
-import { WorkerController } from "src/controller/worker/worker.controller";
-import { AdministratorService } from "src/services/administrator/administrator.service";
-import { BuisnessAnalysis } from "src/services/Analysis/BuisnessAnalysis";
-import { CarpetService } from "src/services/Carpet/carpet.service";
-import { CarpetReceptionsService } from "src/services/carpetReceprion/carpet.reception.service";
-import { ClientsService } from "src/services/clients/clients.service";
-import { RefreshTokenService } from "src/services/refreshToken/refreshToken";
-import SchadulingCarpetService from "src/services/SchedulingCarpet/SchedulingCarpet";
-import { SubscibersService } from "src/services/subscribers/subscribers.service";
-import { UserService } from "src/services/user/user.service";
-import { WorkerService } from "src/services/worker/workers.service";
-import { MailerController } from "src/controller/mailer/mailer.controller";
-import { UserMailerService } from "src/services/mailer/mailer.service";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { Costs } from "entities/Costs";
-import { CostsService } from "src/services/Costs/costs.service";
-import { CostsController } from "src/controller/Costs/costs.controller";
-import { Cost } from "entities/Cost";
-import { CostController } from "src/controller/Cost/cost.controller";
-import { CostService } from "src/services/Cost/cost.service";
-import { Suppliers } from "entities/Suppliers";
-import { SuppliersController } from "src/controller/Suppliers/suppliers.controller";
-import { SuppliersService } from "src/services/Suppliers/suppliers.service";
-import { Income } from "entities/Income";
-import { IncomeController } from "src/controller/Income/income.controller";
-import { IncomeService } from "src/services/Income/Income";
-import { AddNewIncomeService } from "src/services/AddNewIncome/addNewIncome.service";
-import { AddNewIncome } from "entities/AddNewIncome";
-import { AddNewIncomeController } from "src/controller/AddNewIncome/add.new.income.controller";
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthMiddleware } from 'src/authMiddleware/auth.middleware';
+import { AdministratorModule } from 'src/modules/administrator/administrator.module';
+import { AnalysisModule } from 'src/modules/analysis/analysis.module';
+import { AuthModule } from 'src/modules/auth/auth.module';
+import { CarpetModule } from 'src/modules/carpet/carpet.module';
+import { CarpetReceprionModule } from 'src/modules/carpetReceptions/carpet.reception.module';
+import { ClientsModule } from 'src/modules/clients/clients.module';
+import { CostModule } from 'src/modules/cost/cost.module';
+import { CostsModule } from 'src/modules/costs/costs.module';
+import { IncomeModule } from 'src/modules/income/income.module';
+import { MailerModule } from 'src/modules/mailer/mailer.module';
+import { NewIncomeModule } from 'src/modules/newIncome/new.income.module';
+import { SchedulingCarpetModule } from 'src/modules/schedulingCarpet/scheduling.carpet.module';
+import { SubscibresModule } from 'src/modules/subscribers/subscibers.module';
+import { SuppliersModule } from 'src/modules/suppliers/suppliers.module';
+import { RefreshTokenModule } from 'src/modules/token/refresh.token.module';
+import { UserModule } from 'src/modules/user/user.module';
+import { WorkerModule } from 'src/modules/worker/worker.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: "mysql",
+      type: 'mysql',
       port: 3306,
-      host: "localhost",
-      username: "root",
-      password: "root",
-      database: "apiperionica",
-      entities: [
-        Administrator,
-        User,
-        RefreshToken,
-        RefreshAdministratorToken,
-        Clients,
-        CarpetReception,
-        Worker,
-        Carpet,
-        SchedulingCarpet,
-        Subscribers,
-        Costs,
-        Cost,
-        Suppliers,
-        Income,
-        AddNewIncome
-      ],
+      host: 'localhost',
+      username: 'root',
+      password: 'root',
+      database: 'apiperionica',
+      synchronize: true,
+      logging: true,
+      entities: [__dirname + '/../entities/*.entity{.ts,.js}'],
     }),
-    TypeOrmModule.forFeature([
-      Administrator,
-      User,
-      RefreshToken,
-      RefreshAdministratorToken,
-      Clients,
-      CarpetReception,
-      Worker,
-      Carpet,
-      SchedulingCarpet,
-      Subscribers,
-      Costs,
-      Cost,
-      Suppliers,
-      Income,
-      AddNewIncome
-    ]),
+    ClientsModule,
+    CarpetModule,
+    CarpetReceprionModule,
+    IncomeModule,
+    WorkerModule,
+    UserModule,
+    AdministratorModule,
+    RefreshTokenModule,
+    SuppliersModule,
+    SchedulingCarpetModule,
+    SubscibresModule,
+    CostModule,
+    CostsModule,
+    NewIncomeModule,
+    MailerModule,
+    AnalysisModule,
+    AuthModule,
   ],
-  controllers: [
-    AdministratorController,
-    UserController,
-    AuthController,
-    ClientsContoller,
-    CarpetReceprionController,
-    WorkerController,
-    CarpetController,
-    SchedulingCarpetController,
-    AnalysisController,
-    RefreshTokenController,
-    SubscribersController,
-    MailerController,
-    CostsController,
-    CostController,
-    SuppliersController,
-    IncomeController,
-    AddNewIncomeController
-  ],
-  providers: [
-    AdministratorService,
-    UserService,
-    ClientsService,
-    CarpetReceptionsService,
-    WorkerService,
-    CarpetService,
-    SchadulingCarpetService,
-    BuisnessAnalysis,
-    RefreshTokenService,
-    SubscibersService,
-    UserMailerService,
-    CostsService,
-    CostService,
-    SuppliersService,
-    IncomeService,
-    AddNewIncomeService
-  ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(AuthMiddleware)
-      .exclude("auth/*", "api/user/addUser")
-      .forRoutes("api/*");
+    consumer.apply(AuthMiddleware).exclude('auth/*', 'api/user/addUser').forRoutes('api/*');
   }
 }
