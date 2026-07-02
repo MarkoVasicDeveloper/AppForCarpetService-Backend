@@ -1,10 +1,9 @@
-/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AddSuppliersDto } from 'src/modules/suppliers/DTO/add.suppliers.dto';
-import { EditSuppliersDto } from 'src/modules/suppliers/DTO/edit.suppliers.dto';
+import { AddSuppliersDto } from 'src/modules/suppliers/dto/add-suppliers.dto';
+import { EditSuppliersDto } from 'src/modules/suppliers/dto/edit-suppliers.dto';
 import { Suppliers } from 'src/modules/suppliers/suppliers.entity';
-import { ApiResponse } from 'src/misc/api.restonse';
+import { ApiResponse } from 'src/shared/response/api-response';
 import { Repository } from 'typeorm';
 
 @Injectable()

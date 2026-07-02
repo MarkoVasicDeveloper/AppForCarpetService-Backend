@@ -1,23 +1,37 @@
 import * as crypto from 'crypto';
 
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { JwtData } from 'dto/jwt/jwt.dto';
-import { JwtRefreshData } from 'dto/jwt/jwt.refresh.dto';
+import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as jwt from 'jsonwebtoken';
-import { ApiResponse } from 'src/misc/api.restonse';
-import { JwtSecret } from 'src/misc/jwt.secret';
-import { LoginInfo } from 'src/misc/login.info';
 import { AdministratorService } from 'src/modules/administrator/administrator.service';
-import { UsernameAdministratorDto } from 'src/modules/administrator/DTO/username.administrator.dto';
-import { UserAuthDto } from 'src/modules/user/DTO/user.auth.dto';
+import { UsernameAdministratorDto } from 'src/modules/auth/dto/username-administrator.dto';
+import { UserAuthDto } from 'src/modules/user/dto/user-auth.dto';
 import { UserService } from 'src/modules/user/user.service';
+import { ApiResponse } from 'src/shared/response/api-response';
+import { LoginInfo } from 'src/shared/response/login-info';
+import { Repository } from 'typeorm';
+
+import { JwtRefreshData } from './dto/jwt-refresh.dto';
+import { JwtData } from './dto/jwt.dto';
+import { RefreshToken } from './entities/refresh-token.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly administratorService: AdministratorService,
     private readonly userService: UserService,
+    private readonly configService: ConfigService,
+
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepo: Repository<RefreshToken>,
   ) {}
+
+  private getJwtSecret(): string {
+    const secret = this.configService.get<string>('JWT_SECRET');
+    if (!secret) throw new Error('JWT_SECRET is not defined in environment variables');
+    return secret;
+  }
 
   async loginAdministrator(
     data: UsernameAdministratorDto,
@@ -25,8 +39,7 @@ export class AuthService {
     userAgent?: string,
   ): Promise<ApiResponse | LoginInfo> {
     const admin = await this.administratorService.getAdminByUsername(data);
-    if (!admin)
-      return new ApiResponse('error', -1001, 'Administrator with that username not found');
+    if (!admin) return new ApiResponse('error', -1001, 'Administrator not found');
 
     const passwordHashString = crypto
       .createHash('sha512')
@@ -34,7 +47,7 @@ export class AuthService {
       .digest('hex')
       .toUpperCase();
     if (passwordHashString !== admin.passwordHash)
-      return new ApiResponse('error', -2002, 'Password is incorect');
+      return new ApiResponse('error', -2002, 'Password is incorrect');
 
     const jwtData = this.generateJwtData(
       admin.administratorId,
@@ -43,10 +56,11 @@ export class AuthService {
       ip,
       userAgent,
     );
-    const token = jwt.sign(jwtData.toPlane(), JwtSecret);
+    const secret = this.getJwtSecret();
+    const token = jwt.sign(jwtData.toPlane(), secret);
 
     const jwtRefreshData = this.generateRefreshData(jwtData);
-    const refreshToken = jwt.sign(jwtRefreshData.toPlane(), JwtSecret);
+    const refreshToken = jwt.sign(jwtRefreshData.toPlane(), secret);
 
     await this.administratorService.createAdminToken(
       jwtData.Id,
@@ -69,7 +83,7 @@ export class AuthService {
     userAgent?: string,
   ): Promise<ApiResponse | LoginInfo> {
     const user = await this.userService.getUserByEmail(data);
-    if (!user) return new ApiResponse('error', -1001, 'User with that email not found');
+    if (!user) return new ApiResponse('error', -1001, 'User not found');
 
     const passwordHashString = crypto
       .createHash('sha512')
@@ -77,13 +91,14 @@ export class AuthService {
       .digest('hex')
       .toUpperCase();
     if (passwordHashString !== user.passwordHash)
-      return new ApiResponse('error', -2002, 'Password is incorect');
+      return new ApiResponse('error', -2002, 'Password is incorrect');
 
     const jwtData = this.generateJwtData(user.userId, user.email, 'user', ip, userAgent);
-    const token = jwt.sign(jwtData.toPlane(), JwtSecret);
+    const secret = this.getJwtSecret();
+    const token = jwt.sign(jwtData.toPlane(), secret);
 
     const jwtRefreshData = this.generateRefreshData(jwtData);
-    const refreshToken = jwt.sign(jwtRefreshData.toPlane(), JwtSecret);
+    const refreshToken = jwt.sign(jwtRefreshData.toPlane(), secret);
 
     await this.userService.createToken(
       jwtData.Id,
@@ -121,7 +136,9 @@ export class AuthService {
       ip,
       userAgent,
     );
-    const newToken = jwt.sign(jwtData.toPlane(), JwtSecret);
+
+    const secret = this.getJwtSecret();
+    const newToken = jwt.sign(jwtData.toPlane(), secret);
 
     return new LoginInfo(
       jwtData.Id,
@@ -153,7 +170,9 @@ export class AuthService {
       ip,
       userAgent,
     );
-    const newToken = jwt.sign(jwtData.toPlane(), JwtSecret);
+
+    const secret = this.getJwtSecret();
+    const newToken = jwt.sign(jwtData.toPlane(), secret);
 
     return new LoginInfo(
       jwtData.Id,
@@ -164,11 +183,22 @@ export class AuthService {
     );
   }
 
-  // --- POMOĆNE METODE ---
+  async invalidAllUserTokens(userId: number): Promise<RefreshToken[]> {
+    const userTokens = await this.refreshTokenRepo.find({
+      where: { userId: userId },
+    });
+
+    for (const token of userTokens) {
+      token.isValid = 0;
+    }
+
+    return await this.refreshTokenRepo.save(userTokens);
+  }
+
   private generateJwtData(
     id: number,
     identity: string,
-    role: string,
+    role: 'administrator' | 'user',
     ip: string,
     userAgent?: string,
   ): JwtData {
@@ -177,7 +207,7 @@ export class AuthService {
     jwtData.identity = identity;
     jwtData.expire = new Date().getTime() / 1000 + 60 * 5;
     jwtData.ipAddress = ip;
-    jwtData.userAgent = userAgent;
+    jwtData.userAgent = userAgent ?? '';
     jwtData.role = role;
     return jwtData;
   }
@@ -194,8 +224,11 @@ export class AuthService {
   }
 
   private verifyAndValidateToken(token: string, ip: string, userAgent?: string): JwtRefreshData {
-    const jwtDataObject = jwt.verify(token, JwtSecret) as JwtRefreshData;
-    if (!jwtDataObject) throw new HttpException('Token is incorect', HttpStatus.UNAUTHORIZED);
+    const secret = this.getJwtSecret();
+    const decoded = jwt.verify(token, secret);
+    const jwtDataObject = decoded as unknown as JwtRefreshData;
+
+    if (!jwtDataObject) throw new HttpException('Token is incorrect', HttpStatus.UNAUTHORIZED);
     if (ip !== jwtDataObject.ipAddress)
       throw new HttpException('Bad token found and ip', HttpStatus.UNAUTHORIZED);
     if (userAgent !== jwtDataObject.userAgent)
@@ -203,13 +236,13 @@ export class AuthService {
     return jwtDataObject;
   }
 
-  private getIsoFormat(timestamp: number) {
+  private getIsoFormat(timestamp: number): string {
     const date = new Date();
     date.setTime(timestamp * 1000);
     return date.toISOString();
   }
 
-  private getDatabaseTime(isoFormatTime: string) {
-    return isoFormatTime.substr(0, 19).replace('T', ' ');
+  private getDatabaseTime(isoFormatTime: string): string {
+    return isoFormatTime.substring(0, 19).replace('T', ' ');
   }
 }

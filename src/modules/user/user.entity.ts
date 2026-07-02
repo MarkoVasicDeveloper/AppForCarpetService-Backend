@@ -1,19 +1,19 @@
 import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
-import { RefreshToken } from '../../../entities/RefreshToken';
-import { Subscribers } from '../../../entities/Subscribers';
+import { RefreshToken } from '../auth/entities/refresh-token.entity';
+import { Subscribers } from '../subscribers/subscribers.entity';
 
 @Index('email', ['email'], { unique: true })
 @Entity('user', { schema: 'apiperionica' })
 export class User {
   @PrimaryGeneratedColumn({ type: 'int', name: 'user_id', unsigned: true })
-  userId: number;
+  userId!: number;
 
   @Column('varchar', { name: 'name', length: 50, default: () => "'0'" })
-  name: string;
+  name!: string;
 
   @Column('varchar', { name: 'surname', length: 50, default: () => "'0'" })
-  surname: string;
+  surname!: string;
 
   @Column('varchar', {
     name: 'email',
@@ -21,23 +21,23 @@ export class User {
     length: 50,
     default: () => "'0'",
   })
-  email: string;
+  email!: string;
 
   @Column('varchar', { name: 'city', length: 50, default: () => "'0'" })
-  city: string;
+  city!: string;
 
   @Column('varchar', { name: 'address', length: 255, default: () => "'0'" })
-  address: string;
+  address!: string;
 
   @Column('varchar', { name: 'phone', length: 50, default: () => "'0'" })
-  phone: string;
+  phone!: string;
 
   @Column('varchar', { name: 'password_hash', length: 255 })
-  passwordHash: string;
+  passwordHash!: string;
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
-  refreshTokens: RefreshToken[];
+  refreshTokens!: RefreshToken[];
 
   @OneToMany(() => Subscribers, (subscribers) => subscribers.user)
-  subscribers: Subscribers[];
+  subscribers!: Subscribers[];
 }

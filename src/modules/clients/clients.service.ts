@@ -1,14 +1,12 @@
-/* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AddClientsDto } from 'src/modules/clients/DTO/add.clients.dto';
-import { EditClientDto } from 'src/modules/clients/DTO/edit.client.dto';
-import { GetClientByAddressDto } from 'src/modules/clients/DTO/get.client.by.address.dto';
-import { GetClientByNameDto } from 'src/modules/clients/DTO/get.client.by.name.dto';
-import { GetClientBySurnameDto } from 'src/modules/clients/DTO/get.client.by.surname.dto';
 import { Clients } from 'src/modules/clients/clients.entity';
-import { ApiResponse } from 'src/misc/api.restonse';
+import { AddClientsDto } from 'src/modules/clients/dto/add-clients.dto';
+import { EditClientDto } from 'src/modules/clients/dto/edit-client.dto';
+import { GetClientByAddressDto } from 'src/modules/clients/dto/get-client-by-address.dto';
+import { GetClientByNameDto } from 'src/modules/clients/dto/get-client-by-name.dto';
+import { GetClientBySurnameDto } from 'src/modules/clients/dto/get-client-by-surname.dto';
+import { ApiResponse } from 'src/shared/response/api-response';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -42,7 +40,7 @@ export class ClientsService {
   }
 
   async editClient(data: EditClientDto, clientId: number): Promise<Clients | ApiResponse> {
-    const client = await this.clientsService.findOne(clientId);
+    const client = await this.clientsService.findOne({ where: { clientsId: clientId } });
 
     if (!client) {
       return new ApiResponse('error', -4001, 'Client is not found');
@@ -93,7 +91,7 @@ export class ClientsService {
     return await this.clientsService.find();
   }
 
-  async getClientById(clientId: number, userId: number): Promise<Clients | ApiResponse> {
+  async getClientById(clientId: number, userId: number): Promise<Clients | ApiResponse | null> {
     const client = await this.clientsService.findOne({
       where: {
         clientsId: clientId,
@@ -105,10 +103,10 @@ export class ClientsService {
       return new ApiResponse('error', -4001, 'Client is not found');
     }
 
-    return await this.clientsService.findOne(client.clientsId);
+    return await this.clientsService.findOne({ where: { clientsId: client.clientsId } });
   }
 
-  async getClientByName(data: GetClientByNameDto): Promise<Clients | ApiResponse> {
+  async getClientByName(data: GetClientByNameDto): Promise<Clients | ApiResponse | null> {
     const client = await this.clientsService.findOne({
       where: {
         name: data.name,
@@ -119,12 +117,13 @@ export class ClientsService {
       return new ApiResponse('error', -4001, 'Client is not found');
     }
 
-    return await this.clientsService.findOne(client.clientsId, {
+    return await this.clientsService.findOne({
+      where: { clientsId: client.clientsId },
       relations: ['carpetReceptions'],
     });
   }
 
-  async getClientBySurname(data: GetClientBySurnameDto): Promise<Clients | ApiResponse> {
+  async getClientBySurname(data: GetClientBySurnameDto): Promise<Clients | ApiResponse | null> {
     const client = await this.clientsService.findOne({
       where: {
         surname: data.surname,
@@ -135,12 +134,13 @@ export class ClientsService {
       return new ApiResponse('error', -4001, 'Client is not found');
     }
 
-    return await this.clientsService.findOne(client.clientsId, {
+    return await this.clientsService.findOne({
+      where: { clientsId: client.clientsId },
       relations: ['carpetReceptions'],
     });
   }
 
-  async getClientByAddress(data: GetClientByAddressDto): Promise<Clients | ApiResponse> {
+  async getClientByAddress(data: GetClientByAddressDto): Promise<Clients | ApiResponse | null> {
     const client = await this.clientsService.findOne({
       where: {
         address: data.address,
@@ -151,13 +151,14 @@ export class ClientsService {
       return new ApiResponse('error', -4001, 'Client is not found');
     }
 
-    return await this.clientsService.findOne(client.clientsId, {
+    return await this.clientsService.findOne({
+      where: { clientsId: client.clientsId },
       relations: ['carpetReceptions'],
     });
   }
 
   async deleteClient(clientId: number): Promise<Clients | ApiResponse> {
-    const client = await this.clientsService.findOne(clientId);
+    const client = await this.clientsService.findOne({ where: { clientsId: clientId } });
 
     if (!client) {
       return new ApiResponse('error', -4001, 'Client is not found');
@@ -171,12 +172,7 @@ export class ClientsService {
   async deleteAllClients(): Promise<Clients[]> {
     const allClients = await this.clientsService.find();
 
-    const result = [];
-
-    for (const client of allClients) {
-      const deleteClient = await this.clientsService.remove(client);
-      result.push(deleteClient);
-    }
+    const result = await this.clientsService.remove(allClients);
 
     return result;
   }

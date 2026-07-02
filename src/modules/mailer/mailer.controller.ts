@@ -1,8 +1,7 @@
-/* eslint-disable prettier/prettier */
 import { Body, Controller, Post, SetMetadata, UseGuards } from '@nestjs/common';
-import { MailerAllUserDto } from 'src/modules/mailer/DTO/mailer.allUser.dto';
-import { MailerDto } from 'src/modules/mailer/DTO/mailer.dto';
-import { RolleCheckerGard } from 'src/rollecheckergard/rolle.checker.gatd';
+import { MailerAllUserDto } from 'src/modules/mailer/dto/mailer-all-user.dto';
+import { MailerDto } from 'src/modules/mailer/dto/mailer.dto';
+import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
 
 import { UserMailerService } from './mailer.service';
 
@@ -12,14 +11,14 @@ export class MailerController {
 
   @Post('welcome')
   @SetMetadata('allow_to_roles', ['administrator'])
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   async mailerWelcome(@Body() data: MailerDto) {
     return await this.mailerService.sendEmail(data);
   }
 
   @Post('allUser')
   @SetMetadata('allow_to_roles', ['administrator'])
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   async sendAlluser(@Body() data: MailerAllUserDto) {
     return await this.mailerService.sendEmailAllUser(data);
   }

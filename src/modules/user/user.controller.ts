@@ -1,16 +1,16 @@
-/* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, Param, Post, SetMetadata, UseGuards } from '@nestjs/common';
-import { MailerDto } from 'src/modules/mailer/DTO/mailer.dto';
-import { AddUserDto } from 'src/modules/user/DTO/add.user.dto';
-import { DeleteUserByAdminDto } from 'src/modules/user/DTO/delete.user.by.admin.dto';
-import { DeleteUserDto } from 'src/modules/user/DTO/delete.user.dto';
-import { EditUserDto } from 'src/modules/user/DTO/edit.user.dto';
-import { UserEmailDto } from 'src/modules/user/DTO/user.emai.dto';
+import { MailerDto } from 'src/modules/mailer/dto/mailer.dto';
+import { AddUserDto } from 'src/modules/user/dto/add-user.dto';
+import { DeleteUserByAdminDto } from 'src/modules/user/dto/delete-user-by-admin.dto';
+import { DeleteUserDto } from 'src/modules/user/dto/delete-user.dto';
+import { EditUserDto } from 'src/modules/user/dto/edit-user.dto';
+import { UserEmailDto } from 'src/modules/user/dto/user-email.dto';
 import { User } from 'src/modules/user/user.entity';
-import { ApiResponse } from 'src/misc/api.restonse';
-import { RolleCheckerGard } from 'src/rollecheckergard/rolle.checker.gatd';
-import { UserMailerService } from 'src/services/mailer/mailer.service';
 import { UserService } from 'src/modules/user/user.service';
+import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
+import { ApiResponse } from 'src/shared/response/api-response';
+
+import { UserMailerService } from '../mailer/mailer.service';
 
 @Controller('api/user')
 export class UserController {
@@ -43,43 +43,43 @@ export class UserController {
 
   @Post('editUser')
   @SetMetadata('allow_to_roles', ['administrator', 'user'])
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   async editUser(@Body() data: EditUserDto): Promise<User | ApiResponse> {
     return await this.userService.editUser(data);
   }
 
   @Delete('deleteUser')
   @SetMetadata('allow_to_roles', ['administrator', 'user'])
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   async deleteUser(@Body() data: DeleteUserDto): Promise<User | ApiResponse> {
     return await this.userService.deleteUserHimself(data);
   }
 
   @Delete('deleteUserByAdministrator')
   @SetMetadata('allow_to_roles', ['administrator'])
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   async deleteUserByAdministrator(@Body() data: DeleteUserByAdminDto): Promise<User | ApiResponse> {
     return await this.userService.deleteUserByAdministrator(data);
   }
 
   @Get('getAllUser')
   @SetMetadata('allow_to_roles', ['administrator'])
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   async getAllUser(): Promise<User[]> {
     return await this.userService.getAllUser();
   }
 
   @Post('getUserByEmail')
   @SetMetadata('allow_to_roles', ['administrator'])
-  @UseGuards(RolleCheckerGard)
-  async getUserByEmail(@Body() data: UserEmailDto): Promise<User | ApiResponse> {
+  @UseGuards(RoleCheckerGuard)
+  async getUserByEmail(@Body() data: UserEmailDto): Promise<User | ApiResponse | null> {
     return await this.userService.getUserByEmail(data);
   }
 
   @Post('getUserById/:id')
   @SetMetadata('allow_to_roles', ['administrator', 'user'])
-  @UseGuards(RolleCheckerGard)
-  async getUserById(@Param('id') userId: number): Promise<User | ApiResponse> {
+  @UseGuards(RoleCheckerGuard)
+  async getUserById(@Param('id') userId: number): Promise<User | ApiResponse | null> {
     return await this.userService.getUserById(userId);
   }
 }

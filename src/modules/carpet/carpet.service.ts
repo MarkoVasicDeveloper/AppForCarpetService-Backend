@@ -1,10 +1,9 @@
-/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AddCarpetDto } from 'src/modules/carpet/DTO/add.carpet.dto';
-import { DateCarpetDto } from 'src/modules/carpet/DTO/date.carpet.dto';
 import { Carpet } from 'src/modules/carpet/carpet.entity';
-import { ApiResponse } from 'src/misc/api.restonse';
+import { AddCarpetDto } from 'src/modules/carpet/dto/add-carpet.dto';
+import { DateCarpetDto } from 'src/modules/carpet/dto/date-carpet.dto';
+import { ApiResponse } from 'src/shared/response/api-response';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -68,9 +67,10 @@ export class CarpetService {
   }
 
   async getAllCarpetByDate(data: DateCarpetDto, userId: number): Promise<Carpet[] | ApiResponse> {
+    const dateString = data.data.toISOString().split('T')[0];
     const carpets = await this.carpetService.find({
       where: {
-        deliveryTime: data.data,
+        deliveryTime: dateString,
         userId: userId,
       },
     });

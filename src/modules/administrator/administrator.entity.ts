@@ -1,6 +1,5 @@
+import { RefreshAdministratorToken } from 'src/modules/auth/entities/refresh-administrator-token.entity';
 import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-
-import { RefreshAdministratorToken } from './RefreshAdministratorToken';
 
 @Index('username', ['username'], { unique: true })
 @Entity('administrator', { schema: 'apiperionica' })
@@ -10,7 +9,7 @@ export class Administrator {
     name: 'administrator_id',
     unsigned: true,
   })
-  administratorId: number;
+  administratorId!: number;
 
   @Column('varchar', {
     name: 'username',
@@ -18,18 +17,18 @@ export class Administrator {
     length: 50,
     default: () => "'0'",
   })
-  username: string;
+  username!: string;
 
   @Column('varchar', {
     name: 'password_hash',
     length: 255,
     default: () => "'0'",
   })
-  passwordHash: string;
+  passwordHash!: string;
 
   @OneToMany(
     () => RefreshAdministratorToken,
     (refreshAdministratorToken) => refreshAdministratorToken.administrator,
   )
-  refreshAdministratorTokens: RefreshAdministratorToken[];
+  refreshAdministratorTokens!: RefreshAdministratorToken[];
 }

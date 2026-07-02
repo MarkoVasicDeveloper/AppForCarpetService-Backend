@@ -1,15 +1,16 @@
-/* eslint-disable prettier/prettier */
-import { InjectRepository } from '@nestjs/typeorm';
-import { AddUserDto } from 'src/modules/user/DTO/add.user.dto';
-import { User } from 'src/modules/user/user.entity';
-import { ApiResponse } from 'src/misc/api.restonse';
-import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
-import { EditUserDto } from 'src/modules/user/DTO/edit.user.dto';
-import { DeleteUserDto } from 'src/modules/user/DTO/delete.user.dto';
-import { DeleteUserByAdminDto } from 'src/modules/user/DTO/delete.user.by.admin.dto';
-import { UserEmailDto } from 'src/modules/user/DTO/user.emai.dto';
-import { RefreshToken } from 'entities/RefreshToken';
+
+import { InjectRepository } from '@nestjs/typeorm';
+import { AddUserDto } from 'src/modules/user/dto/add-user.dto';
+import { DeleteUserByAdminDto } from 'src/modules/user/dto/delete-user-by-admin.dto';
+import { DeleteUserDto } from 'src/modules/user/dto/delete-user.dto';
+import { EditUserDto } from 'src/modules/user/dto/edit-user.dto';
+import { UserEmailDto } from 'src/modules/user/dto/user-email.dto';
+import { User } from 'src/modules/user/user.entity';
+import { ApiResponse } from 'src/shared/response/api-response';
+import { Repository } from 'typeorm';
+
+import { RefreshToken } from '../auth/entities/refresh-token.entity';
 
 export class UserService {
   constructor(
@@ -120,7 +121,7 @@ export class UserService {
     return await this.userService.find();
   }
 
-  async getUserByEmail(data: UserEmailDto): Promise<User> {
+  async getUserByEmail(data: UserEmailDto): Promise<User | null> {
     const user = await this.userService.findOne({
       where: {
         email: data.email,
@@ -135,7 +136,7 @@ export class UserService {
   }
 
   async getUserById(id: number): Promise<User | null> {
-    const user = await this.userService.findOne(id);
+    const user = await this.userService.findOne({ where: { userId: id } });
 
     if (!user) {
       return null;
@@ -148,23 +149,19 @@ export class UserService {
     const userRefreshToken = new RefreshToken();
     userRefreshToken.userId = userId;
     userRefreshToken.refreshToken = refreshToken;
-    userRefreshToken.expireAt = expireAt as any;
+    userRefreshToken.expireAt = new Date(expireAt);
 
     return await this.refreshToken.save(userRefreshToken);
   }
 
-  async getUserToken(token: string): Promise<RefreshToken> {
-    const user = await this.refreshToken.findOne({
-      refreshToken: token,
-    });
+  async getUserToken(token: string): Promise<RefreshToken | null> {
+    const user = await this.refreshToken.findOne({ where: { refreshToken: token } });
 
     return user;
   }
 
-  async invalidateToken(token: string): Promise<RefreshToken | ApiResponse> {
-    const userToken = await this.refreshToken.findOne({
-      refreshToken: token,
-    });
+  async invalidateToken(token: string): Promise<RefreshToken | ApiResponse | null> {
+    const userToken = await this.refreshToken.findOne({ where: { refreshToken: token } });
 
     if (!userToken) {
       return new ApiResponse('error', -3001, 'Token not found');
@@ -177,12 +174,12 @@ export class UserService {
     return await this.getUserToken(token);
   }
 
-  async invalidateUserTokens(userId: number): Promise<(RefreshToken | ApiResponse)[]> {
-    const userTokens = await this.refreshToken.find({
-      userId: userId,
-    });
+  async invalidateUserTokens(
+    userId: number,
+  ): Promise<Promise<RefreshToken | ApiResponse | null>[]> {
+    const userTokens = await this.refreshToken.find({ where: { userId: userId } });
 
-    const results = [];
+    const results: Promise<RefreshToken | ApiResponse | null>[] = [];
 
     for (const userToken of userTokens) {
       results.push(this.invalidateToken(userToken.refreshToken));

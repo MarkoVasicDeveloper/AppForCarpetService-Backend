@@ -1,5 +1,6 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { User } from '../src/modules/user/User';
+
+import { User } from '../user/user.entity';
 
 @Index('FK__user', ['userId'], {})
 @Entity('subscribers', { schema: 'apiperionica' })
@@ -9,24 +10,24 @@ export class Subscribers {
     name: 'subscribers_id',
     unsigned: true,
   })
-  subscribersId: number;
+  subscribersId!: number;
 
   @Column('int', { name: 'user_id', unsigned: true, default: () => "'0'" })
-  userId: number;
+  userId!: number;
 
   @Column('timestamp', { name: 'time_at', default: () => 'CURRENT_TIMESTAMP' })
-  timeAt: Date;
+  timeAt!: Date;
 
   @Column('date', { name: 'expire_at' })
-  expireAt: string;
+  expireAt!: string;
 
   @Column('int', { name: 'price', nullable: true, default: () => "'0'" })
-  price: number | null;
+  price!: number | null;
 
   @ManyToOne(() => User, (user) => user.subscribers, {
     onDelete: 'NO ACTION',
     onUpdate: 'CASCADE',
   })
   @JoinColumn([{ name: 'user_id', referencedColumnName: 'userId' }])
-  user: User;
+  user!: User;
 }

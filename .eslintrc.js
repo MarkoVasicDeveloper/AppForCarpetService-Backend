@@ -14,7 +14,14 @@ module.exports = {
   },
   ignorePatterns: ['.eslintrc.js', 'dist', 'node_modules'],
   rules: {
-    '@typescript-eslint/no-explicit-any': 'warn',
+    'no-warning-comments': [
+      'error',
+      {
+        terms: ['.', ''],
+        location: 'anywhere',
+      },
+    ],
+    '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     'no-console': 'warn',
 

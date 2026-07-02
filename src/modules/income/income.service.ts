@@ -1,17 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ApiResponse } from 'src/misc/api.restonse';
-import { AddIncomeDto } from 'src/modules/income/DTO/add.income.dto';
-import { EditIncomeDto } from 'src/modules/income/DTO/edit.income.dto';
-import { Income } from 'src/modules/income/income.entity';
+import { ApiResponse } from 'src/shared/response/api-response';
 import { Repository } from 'typeorm';
+
+import { AddIncomeCategoryDto } from './dto/add-income-category.dto';
+import { AddIncomeEntryDto } from './dto/add-income-entry.dto';
+import { EditIncomeCategoryDto } from './dto/edit-income-category.dto';
+import { EditIncomeEntryDto } from './dto/edit-income-entry.dto';
+import { IncomeCategory } from './entities/income-category.entity';
+import { IncomeEntry } from './entities/income-entry.entity';
 
 @Injectable()
 export class IncomeService {
-  constructor(@InjectRepository(Income) private readonly incomeService: Repository<Income>) {}
+  constructor(
+    @InjectRepository(IncomeCategory)
+    private readonly categoryRepo: Repository<IncomeCategory>,
 
-  async addIncome(data: AddIncomeDto, userId: number): Promise<Income | ApiResponse> {
-    const income = await this.incomeService.findOne({
+    @InjectRepository(IncomeEntry)
+    private readonly entryRepo: Repository<IncomeEntry>,
+  ) {}
+
+  async addCategory(
+    data: AddIncomeCategoryDto,
+    userId: number,
+  ): Promise<IncomeCategory | ApiResponse> {
+    const exists = await this.categoryRepo.findOne({
       where: {
         name: data.name,
         price: data.price,
@@ -19,36 +32,71 @@ export class IncomeService {
       },
     });
 
-    if (income) return new ApiResponse('error', -11001, 'Income alredy exist!');
+    if (exists) return new ApiResponse('error', -11001, 'Income category already exists!');
 
-    const newIncome = new Income();
-    newIncome.name = data.name;
-    newIncome.price = data.price;
-    newIncome.userId = userId;
+    const category = new IncomeCategory();
+    category.name = data.name;
+    category.price = data.price;
+    category.userId = userId;
 
-    return await this.incomeService.save(newIncome);
+    return await this.categoryRepo.save(category);
   }
 
-  async editIncome(data: EditIncomeDto, userId: number): Promise<Income | ApiResponse> {
-    const income = await this.incomeService.findOne({
+  async editCategory(
+    data: EditIncomeCategoryDto,
+    userId: number,
+  ): Promise<IncomeCategory | ApiResponse> {
+    const category = await this.categoryRepo.findOne({
       where: {
         userId: userId,
         incomeId: data.incomeId,
       },
     });
 
-    if (!income) return new ApiResponse('error', -11002, 'Income not found');
+    if (!category) return new ApiResponse('error', -11002, 'Income category not found');
 
-    if (data.name) income.name = data.name;
-    if (data.price) income.price = data.price;
+    if (data.name) category.name = data.name;
+    if (data.price) category.price = data.price;
 
-    return await this.incomeService.save(income);
+    return await this.categoryRepo.save(category);
   }
 
-  async getAllIncome(userId: number): Promise<Income[]> {
-    return await this.incomeService.find({
+  async getAllCategories(userId: number): Promise<IncomeCategory[]> {
+    return await this.categoryRepo.find({
+      where: { userId: userId },
+    });
+  }
+
+  async addEntry(data: AddIncomeEntryDto): Promise<IncomeEntry | ApiResponse> {
+    const entry = new IncomeEntry();
+    entry.incomeId = data.incomeId;
+    entry.value = data.value;
+    entry.userId = data.userId;
+
+    return await this.entryRepo.save(entry);
+  }
+
+  async editEntry(data: EditIncomeEntryDto): Promise<IncomeEntry | ApiResponse> {
+    const entry = await this.entryRepo.findOne({
+      where: {
+        userId: data.userId,
+        incomeId: data.incomeId,
+      },
+    });
+
+    if (!entry) return new ApiResponse('error', -12001, 'Entry not found');
+
+    if (data.incomeId) entry.incomeId = data.incomeId;
+    if (data.value) entry.value = data.value;
+
+    return await this.entryRepo.save(entry);
+  }
+
+  async getAllEntriesFromCategory(userId: number, incomeId: number): Promise<IncomeEntry[]> {
+    return await this.entryRepo.find({
       where: {
         userId: userId,
+        incomeId: incomeId,
       },
     });
   }

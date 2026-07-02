@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Worker } from 'src/modules/worker/worker.entity';
 
 import { WorkerController } from './worker.controller';
-import { WorkerService } from './workers.service';
+import { WorkerService } from './worker.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Worker])],

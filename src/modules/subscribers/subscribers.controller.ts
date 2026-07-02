@@ -1,10 +1,10 @@
-/* eslint-disable prettier/prettier */
 import { Body, Controller, Get, Param, Post, SetMetadata, UseGuards } from '@nestjs/common';
-import { AddSubscribersDto } from 'src/modules/subscribers/DTO/add.subscribers.dto';
-import { Subscribers } from 'entities/Subscribers';
-import { ApiResponse } from 'src/misc/api.restonse';
-import { RolleCheckerGard } from 'src/rollecheckergard/rolle.checker.gatd';
+import { AddSubscribersDto } from 'src/modules/subscribers/dto/add-subscribers.dto';
 import { SubscibersService } from 'src/modules/subscribers/subscribers.service';
+import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
+import { ApiResponse } from 'src/shared/response/api-response';
+
+import { Subscribers } from './subscribers.entity';
 
 @Controller('api/subscriber')
 export class SubscribersController {
@@ -12,14 +12,14 @@ export class SubscribersController {
 
   @Post('add')
   @SetMetadata('allow_to_roles', ['user', 'administrator'])
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   async addSubscriber(@Body() data: AddSubscribersDto): Promise<Subscribers | ApiResponse> {
     return await this.subscriberService.addSubscriber(data);
   }
 
   @Get('/:id')
   @SetMetadata('allow_to_roles', ['user', 'administrator'])
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   async findByUserId(@Param('id') userId: number): Promise<Subscribers[]> {
     return await this.subscriberService.findByUserId(userId);
   }

@@ -4,7 +4,7 @@ import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 @Entity('worker', { schema: 'apiperionica' })
 export class Worker {
   @PrimaryGeneratedColumn({ type: 'int', name: 'worker_id', unsigned: true })
-  workerId: number;
+  workerId!: number;
 
   @Column('varchar', {
     name: 'name',
@@ -12,11 +12,11 @@ export class Worker {
     length: 50,
     default: () => "'0'",
   })
-  name: string;
+  name!: string;
 
   @Column('varchar', { name: 'password', length: 255, default: () => "'0'" })
-  password: string;
+  password!: string;
 
   @Column('int', { name: 'userId', unsigned: true })
-  userId: number;
+  userId!: number;
 }

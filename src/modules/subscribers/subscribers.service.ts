@@ -1,10 +1,10 @@
-/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AddSubscribersDto } from 'src/modules/subscribers/DTO/add.subscribers.dto';
-import { Subscribers } from 'entities/Subscribers';
-import { ApiResponse } from 'src/misc/api.restonse';
+import { AddSubscribersDto } from 'src/modules/subscribers/dto/add-subscribers.dto';
+import { ApiResponse } from 'src/shared/response/api-response';
 import { Repository } from 'typeorm';
+
+import { Subscribers } from './subscribers.entity';
 
 @Injectable()
 export class SubscibersService {

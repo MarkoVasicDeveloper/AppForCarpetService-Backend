@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Income } from 'src/modules/income/income.entity';
 
-import { IncomeService } from './income.service';
+import { IncomeCategory } from './entities/income-category.entity';
+import { IncomeEntry } from './entities/income-entry.entity';
 import { IncomeController } from './income.controller';
+import { IncomeService } from './income.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Income])],
+  imports: [TypeOrmModule.forFeature([IncomeCategory, IncomeEntry])],
   controllers: [IncomeController],
   providers: [IncomeService],
-  exports: [IncomeService, TypeOrmModule],
+  exports: [IncomeService],
 })
 export class IncomeModule {}

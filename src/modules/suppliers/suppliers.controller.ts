@@ -1,17 +1,16 @@
-/* eslint-disable prettier/prettier */
 import { Body, Controller, Get, Param, Post, SetMetadata, UseGuards } from '@nestjs/common';
-import { AddSuppliersDto } from 'src/modules/suppliers/DTO/add.suppliers.dto';
-import { EditSuppliersDto } from 'src/modules/suppliers/DTO/edit.suppliers.dto';
+import { AddSuppliersDto } from 'src/modules/suppliers/dto/add-suppliers.dto';
+import { EditSuppliersDto } from 'src/modules/suppliers/dto/edit-suppliers.dto';
 import { Suppliers } from 'src/modules/suppliers/suppliers.entity';
-import { ApiResponse } from 'src/misc/api.restonse';
-import { RolleCheckerGard } from 'src/rollecheckergard/rolle.checker.gatd';
 import { SuppliersService } from 'src/modules/suppliers/suppliers.service';
+import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
+import { ApiResponse } from 'src/shared/response/api-response';
 
 @Controller('api/suppliers')
 export class SuppliersController {
   constructor(private readonly suppliersService: SuppliersService) {}
   @Post('addSuppliers/:costsId/:id')
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   @SetMetadata('allow_to_roles', ['user', 'administrator'])
   async addSupplier(
     @Body() data: AddSuppliersDto,
@@ -22,7 +21,7 @@ export class SuppliersController {
   }
 
   @Post('editSuppliers/:supplierId/:id')
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   @SetMetadata('allow_to_roles', ['user', 'administrator'])
   async editSuppliers(
     @Body() data: EditSuppliersDto,
@@ -33,7 +32,7 @@ export class SuppliersController {
   }
 
   @Get('getAllSuppliers/:costsId/:userId')
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   @SetMetadata('allow_to_roles', ['user', 'administrator'])
   async getAllSuppliers(
     @Param('costsId') costsId: number,

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 import { UserModule } from '../user/user.module';
 
@@ -6,7 +6,7 @@ import { MailerController } from './mailer.controller';
 import { UserMailerService } from './mailer.service';
 
 @Module({
-  imports: [UserModule],
+  imports: [forwardRef(() => UserModule)],
   controllers: [MailerController],
   providers: [UserMailerService],
   exports: [UserMailerService],

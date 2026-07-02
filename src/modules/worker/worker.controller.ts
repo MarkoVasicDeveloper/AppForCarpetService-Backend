@@ -1,10 +1,9 @@
-/* eslint-disable prettier/prettier */
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { AddWorkerDto } from 'src/modules/worker/DTO/add.worker.dto';
-import { EditWorkerDto } from 'src/modules/worker/DTO/edit.worker.dto';
+import { AddWorkerDto } from 'src/modules/worker/dto/add-worker.dto';
+import { EditWorkerDto } from 'src/modules/worker/dto/edit-worker.dto';
 import { Worker } from 'src/modules/worker/worker.entity';
-import { ApiResponse } from 'src/misc/api.restonse';
-import { WorkerService } from 'src/modules/worker/workers.service';
+import { WorkerService } from 'src/modules/worker/worker.service';
+import { ApiResponse } from 'src/shared/response/api-response';
 
 @Controller('api/worker')
 export class WorkerController {

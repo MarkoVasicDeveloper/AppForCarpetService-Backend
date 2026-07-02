@@ -1,18 +1,17 @@
-/* eslint-disable prettier/prettier */
 import { Body, Controller, Get, Param, Post, SetMetadata, UseGuards } from '@nestjs/common';
-import { AddCarpetDto } from 'src/modules/carpet/DTO/add.carpet.dto';
-import { DateCarpetDto } from 'src/modules/carpet/DTO/date.carpet.dto';
 import { Carpet } from 'src/modules/carpet/carpet.entity';
-import { ApiResponse } from 'src/misc/api.restonse';
-import { RolleCheckerGard } from 'src/rollecheckergard/rolle.checker.gatd';
 import { CarpetService } from 'src/modules/carpet/carpet.service';
+import { AddCarpetDto } from 'src/modules/carpet/dto/add-carpet.dto';
+import { DateCarpetDto } from 'src/modules/carpet/dto/date-carpet.dto';
+import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
+import { ApiResponse } from 'src/shared/response/api-response';
 
 @Controller('api/carpet')
 export class CarpetController {
   constructor(private readonly carpetService: CarpetService) {}
 
   @Post('addCarpet/:userId')
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   @SetMetadata('allow_to_roles', ['user'])
   async addCarpet(
     @Body() data: AddCarpetDto,
@@ -22,7 +21,7 @@ export class CarpetController {
   }
 
   @Post('editCarpet/:id/:userId')
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   @SetMetadata('allow_to_roles', ['user'])
   async editCarpet(
     @Body() data: AddCarpetDto,
@@ -33,7 +32,7 @@ export class CarpetController {
   }
 
   @Post('getCarpetByDate/:userId')
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   @SetMetadata('allow_to_roles', ['user'])
   async getCarpetByDate(
     @Body() data: DateCarpetDto,
@@ -43,7 +42,7 @@ export class CarpetController {
   }
 
   @Get('getAllCarpetByClientId/:receptionId/:userId')
-  @UseGuards(RolleCheckerGard)
+  @UseGuards(RoleCheckerGuard)
   @SetMetadata('allow_to_roles', ['user'])
   async getAllCarpetByClientId(
     @Param('userId') userId: number,
