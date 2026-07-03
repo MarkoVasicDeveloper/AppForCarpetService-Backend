@@ -29,7 +29,7 @@ import { AuthMiddleware } from 'src/shared/auth-middleware/auth-middleware';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      synchronize: false,
+      synchronize: true,
       logging: true,
       autoLoadEntities: true,
     }),
