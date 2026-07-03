@@ -1,248 +1,162 @@
 import * as crypto from 'crypto';
 
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as jwt from 'jsonwebtoken';
 import { AdministratorService } from 'src/modules/administrator/administrator.service';
-import { UsernameAdministratorDto } from 'src/modules/auth/dto/username-administrator.dto';
-import { UserAuthDto } from 'src/modules/user/dto/user-auth.dto';
 import { UserService } from 'src/modules/user/user.service';
-import { ApiResponse } from 'src/shared/response/api-response';
-import { LoginInfo } from 'src/shared/response/login-info';
+import { LoginResponse } from 'src/shared/response/login-response';
 import { Repository } from 'typeorm';
 
-import { JwtRefreshData } from './dto/jwt-refresh.dto';
-import { JwtData } from './dto/jwt.dto';
+import { LoginDto } from './dto/login.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { JwtPayload } from './types/jwt-payload.interface';
+
+interface IDatabaseToken {
+  isValid: number;
+  expireAt: string | Date;
+}
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly administratorService: AdministratorService,
     private readonly userService: UserService,
-    private readonly configService: ConfigService,
-
+    private readonly jwtService: JwtService,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepo: Repository<RefreshToken>,
   ) {}
 
-  private getJwtSecret(): string {
-    const secret = this.configService.get<string>('JWT_SECRET');
-    if (!secret) throw new Error('JWT_SECRET is not defined in environment variables');
-    return secret;
+  private hashPassword(password: string): string {
+    return crypto.createHash('sha512').update(password).digest('hex').toUpperCase();
   }
 
-  async loginAdministrator(
-    data: UsernameAdministratorDto,
-    ip: string,
-    userAgent?: string,
-  ): Promise<ApiResponse | LoginInfo> {
-    const admin = await this.administratorService.getAdminByUsername(data);
-    if (!admin) return new ApiResponse('error', -1001, 'Administrator not found');
+  async login(data: LoginDto, ip: string, userAgent = ''): Promise<LoginResponse> {
+    let account: {
+      id: number;
+      identity: string;
+      passwordHash: string;
+      role: 'administrator' | 'user';
+    } | null = null;
 
-    const passwordHashString = crypto
-      .createHash('sha512')
-      .update(data.password)
-      .digest('hex')
-      .toUpperCase();
-    if (passwordHashString !== admin.passwordHash)
-      return new ApiResponse('error', -2002, 'Password is incorrect');
-
-    const jwtData = this.generateJwtData(
-      admin.administratorId,
-      admin.username,
-      'administrator',
-      ip,
-      userAgent,
-    );
-    const secret = this.getJwtSecret();
-    const token = jwt.sign(jwtData.toPlane(), secret);
-
-    const jwtRefreshData = this.generateRefreshData(jwtData);
-    const refreshToken = jwt.sign(jwtRefreshData.toPlane(), secret);
-
-    await this.administratorService.createAdminToken(
-      jwtData.Id,
-      this.getDatabaseTime(this.getIsoFormat(jwtRefreshData.expire)),
-      refreshToken,
-    );
-
-    return new LoginInfo(
-      jwtData.Id,
-      jwtData.identity,
-      token,
-      refreshToken,
-      this.getIsoFormat(jwtRefreshData.expire),
-    );
-  }
-
-  async loginUser(
-    data: UserAuthDto,
-    ip: string,
-    userAgent?: string,
-  ): Promise<ApiResponse | LoginInfo> {
-    const user = await this.userService.getUserByEmail(data);
-    if (!user) return new ApiResponse('error', -1001, 'User not found');
-
-    const passwordHashString = crypto
-      .createHash('sha512')
-      .update(data.password)
-      .digest('hex')
-      .toUpperCase();
-    if (passwordHashString !== user.passwordHash)
-      return new ApiResponse('error', -2002, 'Password is incorrect');
-
-    const jwtData = this.generateJwtData(user.userId, user.email, 'user', ip, userAgent);
-    const secret = this.getJwtSecret();
-    const token = jwt.sign(jwtData.toPlane(), secret);
-
-    const jwtRefreshData = this.generateRefreshData(jwtData);
-    const refreshToken = jwt.sign(jwtRefreshData.toPlane(), secret);
-
-    await this.userService.createToken(
-      jwtData.Id,
-      this.getDatabaseTime(this.getIsoFormat(jwtRefreshData.expire)),
-      refreshToken,
-    );
-
-    return new LoginInfo(
-      jwtData.Id,
-      jwtData.identity,
-      token,
-      refreshToken,
-      this.getIsoFormat(jwtRefreshData.expire),
-    );
-  }
-
-  async refreshUserToken(
-    token: string,
-    ip: string,
-    userAgent?: string,
-  ): Promise<LoginInfo | ApiResponse> {
-    const userToken = await this.userService.getUserToken(token);
-    if (!userToken) return new ApiResponse('error', -4001, 'Token not found');
-    if (userToken.isValid === 0) return new ApiResponse('error', -4002, 'Token is not valid');
-
-    if (new Date(userToken.expireAt).getTime() < new Date().getTime()) {
-      return new ApiResponse('error', -4003, 'Token is expired');
+    const admin = await this.administratorService.getAdminByUsername({ username: data.identity });
+    if (admin) {
+      account = {
+        id: admin.administratorId,
+        identity: admin.username,
+        passwordHash: admin.passwordHash,
+        role: 'administrator',
+      };
+    } else {
+      const user = await this.userService.getUserByEmail({ email: data.identity });
+      if (user) {
+        account = {
+          id: user.userId,
+          identity: user.email,
+          passwordHash: user.passwordHash,
+          role: 'user',
+        };
+      }
     }
 
-    const jwtDataObject = this.verifyAndValidateToken(token, ip, userAgent);
-    const jwtData = this.generateJwtData(
-      jwtDataObject.Id,
-      jwtDataObject.identity,
-      jwtDataObject.role,
-      ip,
-      userAgent,
-    );
-
-    const secret = this.getJwtSecret();
-    const newToken = jwt.sign(jwtData.toPlane(), secret);
-
-    return new LoginInfo(
-      jwtData.Id,
-      jwtData.identity,
-      newToken,
-      token,
-      this.getIsoFormat(jwtDataObject.expire),
-    );
-  }
-
-  async refreshAdminToken(
-    token: string,
-    ip: string,
-    userAgent?: string,
-  ): Promise<LoginInfo | ApiResponse> {
-    const adminToken = await this.administratorService.getAdminToken(token);
-    if (!adminToken) return new ApiResponse('error', -4001, 'Token not found');
-    if (adminToken.isValid === 0) return new ApiResponse('error', -4002, 'Token is not valid');
-
-    if (new Date(adminToken.expireAt).getTime() < new Date().getTime()) {
-      return new ApiResponse('error', -4003, 'Token is expired');
+    if (!account) {
+      throw new NotFoundException('Account not found');
     }
 
-    const jwtDataObject = this.verifyAndValidateToken(token, ip, userAgent);
-    const jwtData = this.generateJwtData(
-      jwtDataObject.Id,
-      jwtDataObject.identity,
-      jwtDataObject.role,
-      ip,
-      userAgent,
-    );
-
-    const secret = this.getJwtSecret();
-    const newToken = jwt.sign(jwtData.toPlane(), secret);
-
-    return new LoginInfo(
-      jwtData.Id,
-      jwtData.identity,
-      newToken,
-      token,
-      this.getIsoFormat(jwtDataObject.expire),
-    );
-  }
-
-  async invalidAllUserTokens(userId: number): Promise<RefreshToken[]> {
-    const userTokens = await this.refreshTokenRepo.find({
-      where: { userId: userId },
-    });
-
-    for (const token of userTokens) {
-      token.isValid = 0;
+    if (this.hashPassword(data.password) !== account.passwordHash) {
+      throw new UnauthorizedException('Password is incorrect');
     }
 
-    return await this.refreshTokenRepo.save(userTokens);
+    return this.generateSession(account.id, account.identity, account.role, ip, userAgent);
   }
 
-  private generateJwtData(
+  async refresh(token: string, ip: string, userAgent = ''): Promise<LoginResponse> {
+    const payload = this.verifyTokenSignature(token, ip, userAgent);
+    let tokenRecord: IDatabaseToken | null = null;
+
+    if (payload.role === 'administrator') {
+      tokenRecord = await this.administratorService.getAdminToken(token);
+    } else {
+      tokenRecord = await this.userService.getUserToken(token);
+    }
+
+    this.validateDatabaseToken(tokenRecord);
+
+    const newPayload = this.buildPayload(payload.Id, payload.identity, payload.role, ip, userAgent);
+    const accessToken = this.jwtService.sign(newPayload, { expiresIn: '5m' });
+
+    return {
+      id: payload.Id,
+      identity: payload.identity,
+      token: accessToken,
+      refreshToken: token,
+      tokenExpire: new Date(tokenRecord!.expireAt).toISOString(),
+    };
+  }
+
+  async invalidAllUserTokens(userId: number): Promise<void> {
+    await this.refreshTokenRepo.update({ userId: userId, isValid: 1 }, { isValid: 0 });
+  }
+
+  private buildPayload(
     id: number,
     identity: string,
     role: 'administrator' | 'user',
     ip: string,
-    userAgent?: string,
-  ): JwtData {
-    const jwtData = new JwtData();
-    jwtData.Id = id;
-    jwtData.identity = identity;
-    jwtData.expire = new Date().getTime() / 1000 + 60 * 5;
-    jwtData.ipAddress = ip;
-    jwtData.userAgent = userAgent ?? '';
-    jwtData.role = role;
-    return jwtData;
+    userAgent: string,
+  ): JwtPayload {
+    return { Id: id, identity, role, ipAddress: ip, userAgent };
   }
 
-  private generateRefreshData(jwtData: JwtData): JwtRefreshData {
-    const refresh = new JwtRefreshData();
-    refresh.Id = jwtData.Id;
-    refresh.identity = jwtData.identity;
-    refresh.expire = new Date().getTime() / 1000 + 60 * 60 * 24 * 31;
-    refresh.ipAddress = jwtData.ipAddress;
-    refresh.userAgent = jwtData.userAgent;
-    refresh.role = jwtData.role;
-    return refresh;
+  private async generateSession(
+    id: number,
+    identity: string,
+    role: 'administrator' | 'user',
+    ip: string,
+    userAgent: string,
+  ): Promise<LoginResponse> {
+    const payload = this.buildPayload(id, identity, role, ip, userAgent);
+
+    const token = this.jwtService.sign(payload, { expiresIn: '5m' });
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '31d' });
+
+    const expireDate = new Date();
+    expireDate.setDate(expireDate.getDate() + 31);
+
+    if (role === 'administrator') {
+      await this.administratorService.createAdminToken(id, expireDate.toISOString(), refreshToken);
+    } else {
+      await this.userService.createToken(id, expireDate.toISOString(), refreshToken);
+    }
+
+    return {
+      id: id,
+      identity,
+      token,
+      refreshToken,
+      tokenExpire: expireDate.toISOString(),
+    };
   }
 
-  private verifyAndValidateToken(token: string, ip: string, userAgent?: string): JwtRefreshData {
-    const secret = this.getJwtSecret();
-    const decoded = jwt.verify(token, secret);
-    const jwtDataObject = decoded as unknown as JwtRefreshData;
-
-    if (!jwtDataObject) throw new HttpException('Token is incorrect', HttpStatus.UNAUTHORIZED);
-    if (ip !== jwtDataObject.ipAddress)
-      throw new HttpException('Bad token found and ip', HttpStatus.UNAUTHORIZED);
-    if (userAgent !== jwtDataObject.userAgent)
-      throw new HttpException('Bad token found', HttpStatus.UNAUTHORIZED);
-    return jwtDataObject;
+  private validateDatabaseToken(tokenRecord: IDatabaseToken | null): void {
+    if (!tokenRecord) throw new NotFoundException('Token not found in database');
+    if (tokenRecord.isValid === 0) throw new UnauthorizedException('Token is no longer valid');
+    if (new Date(tokenRecord.expireAt).getTime() < Date.now()) {
+      throw new UnauthorizedException('Token has expired');
+    }
   }
 
-  private getIsoFormat(timestamp: number): string {
-    const date = new Date();
-    date.setTime(timestamp * 1000);
-    return date.toISOString();
-  }
+  private verifyTokenSignature(token: string, ip: string, userAgent: string): JwtPayload {
+    try {
+      const payload = this.jwtService.verify<JwtPayload>(token);
 
-  private getDatabaseTime(isoFormatTime: string): string {
-    return isoFormatTime.substring(0, 19).replace('T', ' ');
+      if (ip !== payload.ipAddress || userAgent !== payload.userAgent) {
+        throw new UnauthorizedException('Security violation: IP or User-Agent mismatch');
+      }
+
+      return payload;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token signature');
+    }
   }
 }
