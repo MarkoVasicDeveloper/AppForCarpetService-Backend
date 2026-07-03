@@ -24,7 +24,7 @@ export class CarpetReceptionsService {
     const client = await this.clientsService.findOne({ where: { clientsId: data.clientsId } });
 
     if (!client) {
-      return new ApiResponse('error', -4001, 'Client is not found');
+      return new ApiResponse(false, -4001, 'Client is not found');
     }
 
     const carpet = new CarpetReception();
@@ -57,7 +57,7 @@ export class CarpetReceptionsService {
     });
 
     if (!carpetReception) {
-      return new ApiResponse('error', -5001, 'Reception is not found');
+      return new ApiResponse(false, -5001, 'Reception is not found');
     }
 
     carpetReception.workerId = workerId;
@@ -106,7 +106,7 @@ export class CarpetReceptionsService {
     });
 
     if (!allReceptions) {
-      return new ApiResponse('error', -11000, 'No order');
+      return new ApiResponse(false, -11000, 'No order');
     }
 
     return allReceptions;
@@ -124,7 +124,7 @@ export class CarpetReceptionsService {
     });
 
     if (!carpetReception) {
-      return new ApiResponse('error', -5001, 'Reception is not found');
+      return new ApiResponse(false, -5001, 'Reception is not found');
     }
 
     return await this.carpetReception.findOne({
@@ -145,7 +145,7 @@ export class CarpetReceptionsService {
     });
 
     if (!reception) {
-      new ApiResponse('error', -5005, 'Reception for that user not found');
+      new ApiResponse(false, -5005, 'Reception for that user not found');
     }
 
     return reception;
@@ -159,7 +159,7 @@ export class CarpetReceptionsService {
     });
 
     if (!allReceptions || allReceptions.length === 0) {
-      return new ApiResponse('error', -5006, 'Receptions not found');
+      return new ApiResponse(false, -5006, 'Receptions not found');
     }
 
     return allReceptions;

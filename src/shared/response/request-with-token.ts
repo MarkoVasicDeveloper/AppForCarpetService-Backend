@@ -1,7 +1,7 @@
-import { JwtData } from 'src/modules/auth/dto/jwt.dto';
+import { JwtPayload } from 'src/modules/auth/types/jwt-payload.interface';
 
 declare module 'express' {
   interface Request {
-    token: JwtData;
+    token: JwtPayload;
   }
 }

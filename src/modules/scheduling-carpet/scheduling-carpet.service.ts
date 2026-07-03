@@ -46,7 +46,7 @@ export default class SchedulingCarpetService {
     });
 
     if (!schedulingCarpet) {
-      return new ApiResponse('error', -12001, 'Not found');
+      return new ApiResponse(false, -12001, 'Not found');
     }
 
     schedulingCarpet.isScheduling = true;

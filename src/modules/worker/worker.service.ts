@@ -28,7 +28,7 @@ export class WorkerService {
 
       return savedWorker;
     } catch (error) {
-      return new ApiResponse('error', -5001, 'The name is busy!');
+      return new ApiResponse(false, -5001, 'The name is busy!');
     }
   }
 
@@ -41,7 +41,7 @@ export class WorkerService {
     });
 
     if (!worker) {
-      return new ApiResponse('error', -5002, 'Worker is not found');
+      return new ApiResponse(false, -5002, 'Worker is not found');
     }
 
     const passwordHash = crypto.createHash('sha512');
@@ -49,7 +49,7 @@ export class WorkerService {
     const passwordHashString = passwordHash.digest('hex').toString().toUpperCase();
 
     if (worker.password !== passwordHashString) {
-      return new ApiResponse('error', -5003, 'Password is incorect');
+      return new ApiResponse(false, -5003, 'Password is incorect');
     }
 
     if (data.newName) {
@@ -75,7 +75,7 @@ export class WorkerService {
     });
 
     if (!worker) {
-      return new ApiResponse('error', -5002, 'Worker is not found!');
+      return new ApiResponse(false, -5002, 'Worker is not found!');
     }
 
     const passwordHash = crypto.createHash('sha512');
@@ -83,7 +83,7 @@ export class WorkerService {
     const passwordHashString = passwordHash.digest('hex').toString().toUpperCase();
 
     if (worker.password !== passwordHashString) {
-      return new ApiResponse('error', -5003, 'Password is incorect');
+      return new ApiResponse(false, -5003, 'Password is incorect');
     }
 
     return worker;
@@ -98,7 +98,7 @@ export class WorkerService {
     });
 
     if (!worker) {
-      return new ApiResponse('error', -5002, 'Worker is not found');
+      return new ApiResponse(false, -5002, 'Worker is not found');
     }
 
     return worker;

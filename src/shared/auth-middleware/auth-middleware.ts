@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NextFunction, Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { AdministratorService } from 'src/modules/administrator/administrator.service';
-import { JwtData } from 'src/modules/auth/dto/jwt.dto';
+import { JwtPayload } from 'src/modules/auth/types/jwt-payload.interface';
 import { UserService } from 'src/modules/user/user.service';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class AuthMiddleware implements NestMiddleware {
     }
 
     const token = req.headers['authorization'].split(' ')[1];
-    let jwtDataObject: JwtData;
+    let jwtDataObject: JwtPayload;
     try {
       const jwtSecret = this.configService.get<string>('JWT_SECRET');
       if (!jwtSecret) {
@@ -28,7 +28,7 @@ export class AuthMiddleware implements NestMiddleware {
       }
 
       const decoded = jwt.verify(token, jwtSecret);
-      jwtDataObject = decoded as unknown as JwtData;
+      jwtDataObject = decoded as unknown as JwtPayload;
     } catch (e) {
       throw new HttpException('Bad token found', HttpStatus.UNAUTHORIZED);
     }
@@ -68,7 +68,7 @@ export class AuthMiddleware implements NestMiddleware {
     }
 
     const trenutniTimestamp = new Date().getTime() / 1000;
-    if (trenutniTimestamp >= jwtDataObject.expire) {
+    if (trenutniTimestamp >= jwtDataObject.exp!) {
       throw new HttpException('The token has expired', HttpStatus.UNAUTHORIZED);
     }
 

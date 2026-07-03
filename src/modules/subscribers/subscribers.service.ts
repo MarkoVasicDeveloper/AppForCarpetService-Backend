@@ -22,7 +22,7 @@ export class SubscibersService {
     const savedSubscriber = await this.subscribersService.save(subscriber);
 
     if (!savedSubscriber) {
-      return new ApiResponse('error', -13000, 'Some mistake');
+      return new ApiResponse(false, -13000, 'Some mistake');
     }
 
     return savedSubscriber;

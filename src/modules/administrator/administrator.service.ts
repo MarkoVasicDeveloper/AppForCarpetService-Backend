@@ -7,7 +7,6 @@ import { AddAdministratorDto } from 'src/modules/administrator/dto/add-administr
 import { DeleteAdministratorDto } from 'src/modules/administrator/dto/delete-administrator.dto';
 import { EditAdministratorDto } from 'src/modules/administrator/dto/edit-administrator.dto';
 import { RefreshAdministratorToken } from 'src/modules/auth/entities/refresh-administrator-token.entity';
-import { UsernameAdministratorDto } from 'src/modules/auth/dto/username-administrator.dto';
 import { ApiResponse } from 'src/shared/response/api-response';
 import { Repository } from 'typeorm';
 
@@ -30,7 +29,7 @@ export class AdministratorService {
 
       return await this.administratorService.save(admin);
     } catch (error) {
-      return new ApiResponse('error', -1001, 'Administrator not saved. Probably username is taken');
+      return new ApiResponse(false, -1001, 'Administrator not saved. Probably username is taken');
     }
   }
 
@@ -40,12 +39,12 @@ export class AdministratorService {
     });
 
     if (!admin) {
-      return new ApiResponse('error', -1002, 'Administrator with that username not exist');
+      return new ApiResponse(false, -1002, 'Administrator with that username not exist');
     }
 
     const oldPassword = this.passwordCrypto(data.password);
     if (oldPassword !== admin.passwordHash) {
-      return new ApiResponse('error', -1003, 'Password incorect');
+      return new ApiResponse(false, -1003, 'Password incorect');
     }
 
     admin.passwordHash = this.passwordCrypto(data.newPassword);
@@ -64,7 +63,7 @@ export class AdministratorService {
     });
 
     if (!admin) {
-      return new ApiResponse('error', -1002, 'Administrator with that username not exist');
+      return new ApiResponse(false, -1002, 'Administrator with that username not exist');
     }
 
     return await this.administratorService.remove(admin);
@@ -74,7 +73,7 @@ export class AdministratorService {
     return await this.administratorService.find();
   }
 
-  async getAdminByUsername(data: UsernameAdministratorDto): Promise<Administrator | undefined> {
+  async getAdminByUsername(data: { username: string }): Promise<Administrator | undefined> {
     const admin = await this.administratorService.findOne({
       where: { username: data.username },
     });
@@ -111,7 +110,7 @@ export class AdministratorService {
     const adminToken = await this.getAdminToken(token);
 
     if (!adminToken || adminToken instanceof ApiResponse) {
-      return new ApiResponse('error', -3001, 'Token not found');
+      return new ApiResponse(false, -3001, 'Token not found');
     }
 
     adminToken.isValid = 0;

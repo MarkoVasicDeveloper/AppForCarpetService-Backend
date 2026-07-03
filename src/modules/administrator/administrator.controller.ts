@@ -3,7 +3,6 @@ import { AdministratorService } from 'src/modules/administrator/administrator.se
 import { AddAdministratorDto } from 'src/modules/administrator/dto/add-administrator.dto';
 import { DeleteAdministratorDto } from 'src/modules/administrator/dto/delete-administrator.dto';
 import { EditAdministratorDto } from 'src/modules/administrator/dto/edit-administrator.dto';
-import { UsernameAdministratorDto } from 'src/modules/auth/dto/username-administrator.dto';
 import { UserService } from 'src/modules/user/user.service';
 import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
 import { ApiResponse } from 'src/shared/response/api-response';
@@ -49,7 +48,7 @@ export class AdministratorController {
   @SetMetadata('allow_to_roles', ['administrator'])
   @UseGuards(RoleCheckerGuard)
   async getAdminByUsername(
-    @Body() data: UsernameAdministratorDto,
+    @Body() data: { username: string },
   ): Promise<Administrator | ApiResponse | undefined> {
     return await this.administratorService.getAdminByUsername(data);
   }
@@ -62,6 +61,6 @@ export class AdministratorController {
 
     await Promise.all(tokenPromises);
 
-    return new ApiResponse('success', 0, 'All refresh tokens for this user have been invalidated.');
+    return new ApiResponse(true, 0, 'All refresh tokens for this user have been invalidated.');
   }
 }

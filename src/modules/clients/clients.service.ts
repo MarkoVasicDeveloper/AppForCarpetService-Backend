@@ -43,7 +43,7 @@ export class ClientsService {
     const client = await this.clientsService.findOne({ where: { clientsId: clientId } });
 
     if (!client) {
-      return new ApiResponse('error', -4001, 'Client is not found');
+      return new ApiResponse(false, -4001, 'Client is not found');
     }
 
     if (data.name) {
@@ -81,7 +81,7 @@ export class ClientsService {
     });
 
     if (!client) {
-      return new ApiResponse('error', -4001, 'Client not found');
+      return new ApiResponse(false, -4001, 'Client not found');
     }
 
     return client;
@@ -100,7 +100,7 @@ export class ClientsService {
     });
 
     if (!client) {
-      return new ApiResponse('error', -4001, 'Client is not found');
+      return new ApiResponse(false, -4001, 'Client is not found');
     }
 
     return await this.clientsService.findOne({ where: { clientsId: client.clientsId } });
@@ -114,7 +114,7 @@ export class ClientsService {
     });
 
     if (!client) {
-      return new ApiResponse('error', -4001, 'Client is not found');
+      return new ApiResponse(false, -4001, 'Client is not found');
     }
 
     return await this.clientsService.findOne({
@@ -131,7 +131,7 @@ export class ClientsService {
     });
 
     if (!client) {
-      return new ApiResponse('error', -4001, 'Client is not found');
+      return new ApiResponse(false, -4001, 'Client is not found');
     }
 
     return await this.clientsService.findOne({
@@ -148,7 +148,7 @@ export class ClientsService {
     });
 
     if (!client) {
-      return new ApiResponse('error', -4001, 'Client is not found');
+      return new ApiResponse(false, -4001, 'Client is not found');
     }
 
     return await this.clientsService.findOne({
@@ -161,7 +161,7 @@ export class ClientsService {
     const client = await this.clientsService.findOne({ where: { clientsId: clientId } });
 
     if (!client) {
-      return new ApiResponse('error', -4001, 'Client is not found');
+      return new ApiResponse(false, -4001, 'Client is not found');
     }
 
     const deleteClient = await this.clientsService.remove(client);

@@ -37,7 +37,7 @@ export class UserService {
 
       return savedUser;
     } catch (error) {
-      return new ApiResponse('error', -10001, 'Email is taken');
+      return new ApiResponse(false, -10001, 'Email is taken');
     }
   }
 
@@ -49,7 +49,7 @@ export class UserService {
     });
 
     if (!user) {
-      return new ApiResponse('error', -2001, 'User not found. Email is incorect');
+      return new ApiResponse(false, -2001, 'User not found. Email is incorect');
     }
 
     if (data.address) {
@@ -85,7 +85,7 @@ export class UserService {
     });
 
     if (!user) {
-      return new ApiResponse('error', -1002, 'User with that email not exist');
+      return new ApiResponse(false, -1002, 'User with that email not exist');
     }
 
     const passwordString = crypto.createHash('sha512');
@@ -93,7 +93,7 @@ export class UserService {
     const passwordStringHash = passwordString.digest('hex').toString().toUpperCase();
 
     if (user.passwordHash !== passwordStringHash) {
-      return new ApiResponse('error', -2002, 'Password is incorect');
+      return new ApiResponse(false, -2002, 'Password is incorect');
     }
 
     const userDelete = await this.userService.remove(user);
@@ -109,7 +109,7 @@ export class UserService {
     });
 
     if (!user) {
-      return new ApiResponse('error', -1002, 'User with that email not exist');
+      return new ApiResponse(false, -1002, 'User with that email not exist');
     }
 
     const userDelete = await this.userService.remove(user);
@@ -164,7 +164,7 @@ export class UserService {
     const userToken = await this.refreshToken.findOne({ where: { refreshToken: token } });
 
     if (!userToken) {
-      return new ApiResponse('error', -3001, 'Token not found');
+      return new ApiResponse(false, -3001, 'Token not found');
     }
 
     userToken.isValid = 0;

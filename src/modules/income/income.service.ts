@@ -32,7 +32,7 @@ export class IncomeService {
       },
     });
 
-    if (exists) return new ApiResponse('error', -11001, 'Income category already exists!');
+    if (exists) return new ApiResponse(false, -11001, 'Income category already exists!');
 
     const category = new IncomeCategory();
     category.name = data.name;
@@ -53,7 +53,7 @@ export class IncomeService {
       },
     });
 
-    if (!category) return new ApiResponse('error', -11002, 'Income category not found');
+    if (!category) return new ApiResponse(false, -11002, 'Income category not found');
 
     if (data.name) category.name = data.name;
     if (data.price) category.price = data.price;
@@ -84,7 +84,7 @@ export class IncomeService {
       },
     });
 
-    if (!entry) return new ApiResponse('error', -12001, 'Entry not found');
+    if (!entry) return new ApiResponse(false, -12001, 'Entry not found');
 
     if (data.incomeId) entry.incomeId = data.incomeId;
     if (data.value) entry.value = data.value;

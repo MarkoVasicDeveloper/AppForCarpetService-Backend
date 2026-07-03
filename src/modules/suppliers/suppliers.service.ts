@@ -26,7 +26,7 @@ export class SuppliersService {
       },
     });
 
-    if (supplier) return new ApiResponse('error', -4010, 'Supplier alredy exist');
+    if (supplier) return new ApiResponse(false, -4010, 'Supplier alredy exist');
 
     const newSuppliers = new Suppliers();
     newSuppliers.costsId = costsId;
@@ -51,7 +51,7 @@ export class SuppliersService {
       },
     });
 
-    if (!supplier) return new ApiResponse('error', -4011, 'Supplier is not fount');
+    if (!supplier) return new ApiResponse(false, -4011, 'Supplier is not fount');
 
     if (data.address) supplier.address = data.address;
     if (data.bankAccaunt) supplier.bankAccount = data.bankAccaunt;

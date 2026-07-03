@@ -26,7 +26,7 @@ export class CarpetService {
     const savedCarpet = await this.carpetService.save(carpet);
 
     if (!savedCarpet) {
-      return new ApiResponse('error', -11000, 'Catpet not saved');
+      return new ApiResponse(false, -11000, 'Catpet not saved');
     }
 
     return savedCarpet;
@@ -45,7 +45,7 @@ export class CarpetService {
     });
 
     if (!carpet) {
-      return new ApiResponse('error', -11001, 'Carpet is not found');
+      return new ApiResponse(false, -11001, 'Carpet is not found');
     }
 
     carpet.carpetReceptionUser = data.carpetReception;
@@ -60,7 +60,7 @@ export class CarpetService {
     const savedCarpet = await this.carpetService.save(carpet);
 
     if (!savedCarpet) {
-      return new ApiResponse('error', -11000, 'Catpet not saved');
+      return new ApiResponse(false, -11000, 'Catpet not saved');
     }
 
     return savedCarpet;
@@ -76,7 +76,7 @@ export class CarpetService {
     });
 
     if (!carpets) {
-      return new ApiResponse('error', -11002, 'No carpet for delivery');
+      return new ApiResponse(false, -11002, 'No carpet for delivery');
     }
 
     return carpets;
@@ -94,7 +94,7 @@ export class CarpetService {
     });
 
     if (!allCarpet) {
-      return new ApiResponse('error', -11003, 'Not found');
+      return new ApiResponse(false, -11003, 'Not found');
     }
 
     return allCarpet;

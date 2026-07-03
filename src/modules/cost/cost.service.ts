@@ -25,7 +25,7 @@ export class CostService {
       where: { title: data.title },
     });
 
-    if (exists) return new ApiResponse('error', -4001, 'Category exists');
+    if (exists) return new ApiResponse(false, -4001, 'Category exists');
 
     const newCategory = new CostCategory();
     newCategory.title = data.title;
@@ -42,7 +42,7 @@ export class CostService {
       where: { title: data.title, userId: userId },
     });
 
-    if (!category) return new ApiResponse('error', -4002, 'Category not found.');
+    if (!category) return new ApiResponse(false, -4002, 'Category not found.');
 
     category.title = data.editTitle;
     return await this.categoryRepo.save(category);
@@ -75,7 +75,7 @@ export class CostService {
         userId: data.userId,
       },
     });
-    if (!cost) return new ApiResponse('error', -4003, 'No such cost found');
+    if (!cost) return new ApiResponse(false, -4003, 'No such cost found');
 
     if (data.maturityData !== undefined) cost.maturityData = data.maturityData;
     if (data.paid !== undefined) cost.paid = data.paid;
