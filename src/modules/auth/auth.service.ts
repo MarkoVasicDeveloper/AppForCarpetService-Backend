@@ -1,10 +1,12 @@
 import * as crypto from 'crypto';
 
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AdministratorService } from 'src/modules/administrator/administrator.service';
 import { UserService } from 'src/modules/user/user.service';
+import { Role } from 'src/shared/enums/role.enum';
 import { LoginResponse } from 'src/shared/response/login-response';
 import { Repository } from 'typeorm';
 
@@ -23,6 +25,7 @@ export class AuthService {
     private readonly administratorService: AdministratorService,
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepo: Repository<RefreshToken>,
   ) {}
@@ -36,7 +39,7 @@ export class AuthService {
       id: number;
       identity: string;
       passwordHash: string;
-      role: 'administrator' | 'user';
+      role: Role;
     } | null = null;
 
     const admin = await this.administratorService.getAdminByUsername({ username: data.identity });
@@ -45,7 +48,7 @@ export class AuthService {
         id: admin.administratorId,
         identity: admin.username,
         passwordHash: admin.passwordHash,
-        role: 'administrator',
+        role: Role.ADMINISTRATOR,
       };
     } else {
       const user = await this.userService.getUserByEmail({ email: data.identity });
@@ -54,7 +57,7 @@ export class AuthService {
           id: user.userId,
           identity: user.email,
           passwordHash: user.passwordHash,
-          role: 'user',
+          role: Role.USER,
         };
       }
     }
@@ -74,7 +77,7 @@ export class AuthService {
     const payload = this.verifyTokenSignature(token, ip, userAgent);
     let tokenRecord: IDatabaseToken | null = null;
 
-    if (payload.role === 'administrator') {
+    if (payload.role === Role.ADMINISTRATOR) {
       tokenRecord = await this.administratorService.getAdminToken(token);
     } else {
       tokenRecord = await this.userService.getUserToken(token);
@@ -82,16 +85,13 @@ export class AuthService {
 
     this.validateDatabaseToken(tokenRecord);
 
-    const newPayload = this.buildPayload(payload.Id, payload.identity, payload.role, ip, userAgent);
-    const accessToken = this.jwtService.sign(newPayload, { expiresIn: '5m' });
+    if (payload.role === Role.ADMINISTRATOR) {
+      await this.administratorService.invalidateToken(token);
+    } else {
+      await this.userService.invalidateToken(token);
+    }
 
-    return {
-      id: payload.Id,
-      identity: payload.identity,
-      token: accessToken,
-      refreshToken: token,
-      tokenExpire: new Date(tokenRecord!.expireAt).toISOString(),
-    };
+    return this.generateSession(payload.Id, payload.identity, payload.role, ip, userAgent);
   }
 
   async invalidAllUserTokens(userId: number): Promise<void> {
@@ -101,7 +101,7 @@ export class AuthService {
   private buildPayload(
     id: number,
     identity: string,
-    role: 'administrator' | 'user',
+    role: Role,
     ip: string,
     userAgent: string,
   ): JwtPayload {
@@ -111,19 +111,21 @@ export class AuthService {
   private async generateSession(
     id: number,
     identity: string,
-    role: 'administrator' | 'user',
+    role: Role,
     ip: string,
     userAgent: string,
   ): Promise<LoginResponse> {
     const payload = this.buildPayload(id, identity, role, ip, userAgent);
 
-    const token = this.jwtService.sign(payload, { expiresIn: '5m' });
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '31d' });
+    const secret = this.configService.get<string>('JWT_SECRET') || 'DEFAULT_SECRET_PRODUKCIJA';
+
+    const token = this.jwtService.sign(payload, { expiresIn: '5m', secret });
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '31d', secret });
 
     const expireDate = new Date();
     expireDate.setDate(expireDate.getDate() + 31);
 
-    if (role === 'administrator') {
+    if (role === Role.ADMINISTRATOR) {
       await this.administratorService.createAdminToken(id, expireDate.toISOString(), refreshToken);
     } else {
       await this.userService.createToken(id, expireDate.toISOString(), refreshToken);
@@ -148,7 +150,8 @@ export class AuthService {
 
   private verifyTokenSignature(token: string, ip: string, userAgent: string): JwtPayload {
     try {
-      const payload = this.jwtService.verify<JwtPayload>(token);
+      const secret = this.configService.get<string>('JWT_SECRET') || 'DEFAULT_SECRET_PRODUKCIJA';
+      const payload = this.jwtService.verify<JwtPayload>(token, { secret });
 
       if (ip !== payload.ipAddress || userAgent !== payload.userAgent) {
         throw new UnauthorizedException('Security violation: IP or User-Agent mismatch');

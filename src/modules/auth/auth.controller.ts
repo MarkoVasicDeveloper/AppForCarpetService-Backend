@@ -15,6 +15,7 @@ import {
   RequestMetaData,
 } from 'src/shared/decorators/request-metadata.decorator';
 import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Role } from 'src/shared/enums/role.enum';
 import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
 
 import { AuthService } from './auth.service';
@@ -41,7 +42,7 @@ export class AuthController {
 
   @Delete('users/:userId/tokens')
   @UseGuards(RoleCheckerGuard)
-  @Roles('administrator')
+  @Roles(Role.ADMINISTRATOR)
   @HttpCode(HttpStatus.OK)
   async invalidateAllUserTokens(@Param('userId', ParseIntPipe) userId: number): Promise<void> {
     return await this.authService.invalidAllUserTokens(userId);

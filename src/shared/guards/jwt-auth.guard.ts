@@ -34,7 +34,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   override handleRequest<TUser = unknown>(
     err: unknown,
     user: TUser | false,
-    info: unknown,
+    _info: unknown,
     context: ExecutionContext,
   ): TUser {
     const request = context.switchToHttp().getRequest<Request>();
