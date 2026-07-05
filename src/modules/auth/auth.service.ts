@@ -1,5 +1,3 @@
-import * as crypto from 'crypto';
-
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -8,6 +6,7 @@ import { AdministratorService } from 'src/modules/administrator/administrator.se
 import { UserService } from 'src/modules/user/user.service';
 import { Role } from 'src/shared/enums/role.enum';
 import { LoginResponse } from 'src/shared/response/login-response';
+import { CryptoUtil } from 'src/shared/utils/crypto.util';
 import { Repository } from 'typeorm';
 
 import { LoginDto } from './dto/login.dto';
@@ -29,10 +28,6 @@ export class AuthService {
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepo: Repository<RefreshToken>,
   ) {}
-
-  private hashPassword(password: string): string {
-    return crypto.createHash('sha512').update(password).digest('hex').toUpperCase();
-  }
 
   async login(data: LoginDto, ip: string, userAgent = ''): Promise<LoginResponse> {
     let account: {
@@ -66,7 +61,7 @@ export class AuthService {
       throw new NotFoundException('Account not found');
     }
 
-    if (this.hashPassword(data.password) !== account.passwordHash) {
+    if (CryptoUtil.hashPassword(data.password) !== account.passwordHash) {
       throw new UnauthorizedException('Password is incorrect');
     }
 
