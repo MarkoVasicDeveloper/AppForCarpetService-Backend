@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { RefreshAdministratorToken } from 'src/modules/auth/entities/refresh-administrator-token.entity';
 import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -24,11 +25,13 @@ export class Administrator {
     length: 255,
     default: () => "'0'",
   })
+  @Exclude()
   passwordHash!: string;
 
   @OneToMany(
     () => RefreshAdministratorToken,
     (refreshAdministratorToken) => refreshAdministratorToken.administrator,
+    { onDelete: 'CASCADE' },
   )
   refreshAdministratorTokens!: RefreshAdministratorToken[];
 }
