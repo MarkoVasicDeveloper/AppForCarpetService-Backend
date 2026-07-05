@@ -30,7 +30,7 @@ export class RefreshAdministratorToken {
   isValid!: number;
 
   @ManyToOne(() => Administrator, (administrator) => administrator.refreshAdministratorTokens, {
-    onDelete: 'RESTRICT',
+    onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
   @JoinColumn([{ name: 'administrator_id', referencedColumnName: 'administratorId' }])
