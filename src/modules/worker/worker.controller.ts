@@ -16,13 +16,11 @@ import { AddWorkerDto } from 'src/modules/worker/dto/add-worker.dto';
 import { EditWorkerDto } from 'src/modules/worker/dto/edit-worker.dto';
 import { Worker } from 'src/modules/worker/worker.entity';
 import { WorkerService } from 'src/modules/worker/worker.service';
-import { CurrentUser } from 'src/shared/decorators/current-user.decorators';
+import { CurrentOwnerId } from 'src/shared/decorators/current-owner-id.decorator';
 import { Public } from 'src/shared/decorators/public.decorator';
 import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/enums/role.enum';
 import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
-
-import { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
 
 @Controller('workers')
 @UseGuards(RoleCheckerGuard)
@@ -31,11 +29,8 @@ export class WorkerController {
 
   @Post()
   @Roles(Role.USER, Role.ADMINISTRATOR)
-  async addWorker(
-    @Body() data: AddWorkerDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<Worker> {
-    return await this.workerService.addWorker(data, user.id);
+  async addWorker(@Body() data: AddWorkerDto, @CurrentOwnerId() ownerId: number): Promise<Worker> {
+    return await this.workerService.addWorker(data, ownerId);
   }
 
   @Put(':id')
@@ -43,9 +38,8 @@ export class WorkerController {
   async editWorker(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: EditWorkerDto,
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentOwnerId() ownerId: number,
   ): Promise<Worker> {
-    const ownerId = user.role === Role.WORKER ? user.userId! : user.id;
     return await this.workerService.editWorker(id, data, ownerId);
   }
 
@@ -63,9 +57,8 @@ export class WorkerController {
   @Roles(Role.USER, Role.ADMINISTRATOR, Role.WORKER)
   async findWorkerById(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentOwnerId() ownerId: number,
   ): Promise<Worker> {
-    const ownerId = user.role === Role.WORKER ? user.userId! : user.id;
     return await this.workerService.findWorkerById(id, ownerId);
   }
 
@@ -74,8 +67,8 @@ export class WorkerController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteWorker(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentOwnerId() ownerId: number,
   ): Promise<void> {
-    return await this.workerService.deleteWorker(id, user.id);
+    await this.workerService.deleteWorker(id, ownerId);
   }
 }

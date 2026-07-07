@@ -9,6 +9,7 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
+import { CurrentOwnerId } from 'src/shared/decorators/current-owner-id.decorator';
 import { CurrentUser } from 'src/shared/decorators/current-user.decorators';
 import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/enums/role.enum';
@@ -31,28 +32,25 @@ export class CarpetController {
   @Get('by-date')
   async getCarpetsByDate(
     @Query() query: GetCarpetsByDateDto,
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentOwnerId() ownerId: number,
   ): Promise<Carpet[]> {
-    const ownerId = user.role === Role.WORKER ? user.userId! : user.id;
     return await this.carpetService.getAllCarpetsByDate(query.date, ownerId);
   }
 
   @Get('client/:receptionId')
   async getAllCarpetsByClientId(
     @Param('receptionId', ParseIntPipe) receptionId: number,
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentOwnerId() ownerId: number,
   ): Promise<Carpet[]> {
-    const ownerId = user.role === Role.WORKER ? user.userId! : user.id;
     return await this.carpetService.getAllCarpetsByClientId(receptionId, ownerId);
   }
 
   @Post()
   async addCarpet(
     @Body() data: AddCarpetDto,
+    @CurrentOwnerId() ownerId: number,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Carpet> {
-    const ownerId = user.role === Role.WORKER ? user.userId! : user.id;
-
     const creatorWorkerId = user.role === Role.WORKER ? user.id : undefined;
 
     return await this.carpetService.addCarpet(data, ownerId, creatorWorkerId);
@@ -62,9 +60,8 @@ export class CarpetController {
   async editCarpet(
     @Param('id', ParseIntPipe) carpetId: number,
     @Body() data: EditCarpetDto,
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentOwnerId() ownerId: number,
   ): Promise<Carpet> {
-    const ownerId = user.role === Role.WORKER ? user.userId! : user.id;
     return await this.carpetService.editCarpet(carpetId, data, ownerId);
   }
 }
