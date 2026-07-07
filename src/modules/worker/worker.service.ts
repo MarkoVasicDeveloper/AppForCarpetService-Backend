@@ -1,55 +1,57 @@
-import * as crypto from 'crypto';
-
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddWorkerDto } from 'src/modules/worker/dto/add-worker.dto';
 import { EditWorkerDto } from 'src/modules/worker/dto/edit-worker.dto';
 import { Worker } from 'src/modules/worker/worker.entity';
-import { ApiResponse } from 'src/shared/response/api-response';
-import { Repository } from 'typeorm';
+import { CryptoUtil } from 'src/shared/utils/crypto.util';
+import { Repository, QueryFailedError } from 'typeorm';
 
 @Injectable()
 export class WorkerService {
-  constructor(@InjectRepository(Worker) private readonly workerService: Repository<Worker>) {}
+  constructor(
+    @InjectRepository(Worker)
+    private readonly workerRepository: Repository<Worker>,
+  ) {}
 
-  async addWorker(data: AddWorkerDto, userId: number): Promise<Worker | ApiResponse> {
+  async addWorker(data: AddWorkerDto, userId: number): Promise<Worker> {
+    const worker = this.workerRepository.create({
+      name: data.name,
+      userId,
+    });
+
+    worker.password = await CryptoUtil.hashPassword(data.password);
+
     try {
-      const worker = new Worker();
-      worker.name = data.name;
-      worker.userId = userId;
-
-      const passwordHash = crypto.createHash('sha512');
-      passwordHash.update(data.password);
-      const passwordHashString = passwordHash.digest('hex').toString().toUpperCase();
-
-      worker.password = passwordHashString;
-
-      const savedWorker = await this.workerService.save(worker);
-
-      return savedWorker;
+      return await this.workerRepository.save(worker);
     } catch (error) {
-      return new ApiResponse(false, -5001, 'The name is busy!');
+      if (error instanceof QueryFailedError) {
+        const dbError = error.driverError as { errno?: number; code?: string };
+        if (dbError.errno === 1062 || dbError.code === 'ER_DUP_ENTRY') {
+          throw new ConflictException('The worker name is already busy!');
+        }
+      }
+      throw new InternalServerErrorException('Failed to add worker to the database.');
     }
   }
 
-  async editWorker(data: EditWorkerDto, userId: number): Promise<Worker | ApiResponse> {
-    const worker = await this.workerService.findOne({
-      where: {
-        name: data.name,
-        userId: userId,
-      },
+  async editWorker(id: number, data: EditWorkerDto, userId: number): Promise<Worker> {
+    const worker = await this.workerRepository.findOne({
+      where: { workerId: id, userId },
     });
 
     if (!worker) {
-      return new ApiResponse(false, -5002, 'Worker is not found');
+      throw new NotFoundException('Worker is not found');
     }
 
-    const passwordHash = crypto.createHash('sha512');
-    passwordHash.update(data.password);
-    const passwordHashString = passwordHash.digest('hex').toString().toUpperCase();
-
-    if (worker.password !== passwordHashString) {
-      return new ApiResponse(false, -5003, 'Password is incorect');
+    const isPasswordCorrect = await CryptoUtil.comparePassword(data.password, worker.password);
+    if (!isPasswordCorrect) {
+      throw new BadRequestException('Password is incorrect');
     }
 
     if (data.newName) {
@@ -57,50 +59,54 @@ export class WorkerService {
     }
 
     if (data.newPassword) {
-      const passwordHash = crypto.createHash('sha512');
-      passwordHash.update(data.newPassword);
-      const passwordHashString = passwordHash.digest('hex').toString().toUpperCase();
-      worker.password = passwordHashString;
+      worker.password = await CryptoUtil.hashPassword(data.newPassword);
+    }
+
+    return await this.workerRepository.save(worker);
+  }
+
+  async findWorker(name: string, password: string, userId: number): Promise<Worker> {
+    const worker = await this.workerRepository.findOne({ where: { name, userId } });
+
+    if (!worker) {
+      throw new NotFoundException('Worker is not found!');
+    }
+
+    const isPasswordCorrect = await CryptoUtil.comparePassword(password, worker.password);
+    if (!isPasswordCorrect) {
+      throw new BadRequestException('Password is incorrect');
     }
 
     return worker;
   }
 
-  async findWorker(data: AddWorkerDto, userId: number): Promise<Worker | ApiResponse> {
-    const worker = await this.workerService.findOne({
-      where: {
-        name: data.name,
-        userId: userId,
-      },
+  async findWorkerById(id: number, userId: number): Promise<Worker> {
+    const worker = await this.workerRepository.findOne({
+      where: { workerId: id, userId },
     });
 
     if (!worker) {
-      return new ApiResponse(false, -5002, 'Worker is not found!');
-    }
-
-    const passwordHash = crypto.createHash('sha512');
-    passwordHash.update(data.password);
-    const passwordHashString = passwordHash.digest('hex').toString().toUpperCase();
-
-    if (worker.password !== passwordHashString) {
-      return new ApiResponse(false, -5003, 'Password is incorect');
+      throw new NotFoundException('Worker is not found');
     }
 
     return worker;
   }
 
-  async findWorkerById(id: number, userId: number): Promise<Worker | ApiResponse> {
-    const worker = await this.workerService.findOne({
-      where: {
-        workerId: id,
-        userId: userId,
-      },
+  async getWorkerByName(name: string): Promise<Worker | null> {
+    return await this.workerRepository.findOne({ where: { name } });
+  }
+
+  async deleteWorker(id: number, userId: number): Promise<void> {
+    const worker = await this.workerRepository.findOne({
+      where: { workerId: id, userId },
     });
 
     if (!worker) {
-      return new ApiResponse(false, -5002, 'Worker is not found');
+      throw new NotFoundException(
+        'Worker is not found or you do not have permission to delete them.',
+      );
     }
 
-    return worker;
+    await this.workerRepository.remove(worker);
   }
 }

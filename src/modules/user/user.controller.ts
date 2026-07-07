@@ -1,85 +1,82 @@
-import { Body, Controller, Delete, Get, Param, Post, SetMetadata, UseGuards } from '@nestjs/common';
-import { MailerDto } from 'src/modules/mailer/dto/mailer.dto';
-import { AddUserDto } from 'src/modules/user/dto/add-user.dto';
-import { DeleteUserByAdminDto } from 'src/modules/user/dto/delete-user-by-admin.dto';
-import { DeleteUserDto } from 'src/modules/user/dto/delete-user.dto';
-import { EditUserDto } from 'src/modules/user/dto/edit-user.dto';
-import { UserEmailDto } from 'src/modules/user/dto/user-email.dto';
-import { User } from 'src/modules/user/user.entity';
-import { UserService } from 'src/modules/user/user.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+  ParseIntPipe,
+  ForbiddenException,
+} from '@nestjs/common';
+import { CurrentUser } from 'src/shared/decorators/current-user.decorators';
+import { Public } from 'src/shared/decorators/public.decorator';
+import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Role } from 'src/shared/enums/role.enum';
 import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
-import { ApiResponse } from 'src/shared/response/api-response';
 
-import { UserMailerService } from '../mailer/mailer.service';
+import { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
 
-@Controller('api/user')
+import { AddUserDto } from './dto/add-user.dto';
+import { EditUserDto } from './dto/edit-user.dto';
+import { User } from './user.entity';
+import { UserService } from './user.service';
+
+@Controller('users')
+@UseGuards(RoleCheckerGuard)
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-    private readonly mailerService: UserMailerService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
-  @Post('addUser')
-  async addUser(@Body() data: AddUserDto): Promise<User | ApiResponse> {
-    const conntent: MailerDto = new MailerDto();
-    conntent.email = data.email;
-    conntent.text = `<div style = 'text-align: center'>
-                            <h1 style = "color: #fec400">Dobro dosli</h1>
-                            <p style = 'margin-bottom: 1rem'>
-                                Ovaj softver je besplatan i uvek ce biti!
-                                Drago nam je da saradjujemo sa nekim ko se trudi da
-                                unapredi svoje poslovanje!
-                            </p> 
-                            <p>
-                                Klikom na ovaj link <a href = 'https://washersoftware.com/#/login'>
-                                    Log In
-                                </a> idete na stranucu za logovanje. Unesite vasu lozinku i email.
-                                
-                            </p>               
-                        </div>`;
-    await this.mailerService.sendEmail(conntent);
+  @Post()
+  @Public()
+  async addUser(@Body() data: AddUserDto): Promise<User> {
     return await this.userService.addUser(data);
   }
 
-  @Post('editUser')
-  @SetMetadata('allow_to_roles', ['administrator', 'user'])
-  @UseGuards(RoleCheckerGuard)
-  async editUser(@Body() data: EditUserDto): Promise<User | ApiResponse> {
-    return await this.userService.editUser(data);
+  @Get('me')
+  @Roles(Role.ADMINISTRATOR, Role.USER)
+  async getMyProfile(@CurrentUser() user: AuthenticatedUser): Promise<User> {
+    return await this.userService.getUserById(user.id);
   }
 
-  @Delete('deleteUser')
-  @SetMetadata('allow_to_roles', ['administrator', 'user'])
-  @UseGuards(RoleCheckerGuard)
-  async deleteUser(@Body() data: DeleteUserDto): Promise<User | ApiResponse> {
-    return await this.userService.deleteUserHimself(data);
+  @Put('me')
+  @Roles(Role.ADMINISTRATOR, Role.USER)
+  async editUser(@Body() data: EditUserDto, @CurrentUser() user: AuthenticatedUser): Promise<User> {
+    return await this.userService.editUser(user.id, data);
   }
 
-  @Delete('deleteUserByAdministrator')
-  @SetMetadata('allow_to_roles', ['administrator'])
-  @UseGuards(RoleCheckerGuard)
-  async deleteUserByAdministrator(@Body() data: DeleteUserByAdminDto): Promise<User | ApiResponse> {
-    return await this.userService.deleteUserByAdministrator(data);
+  @Delete('me')
+  @Roles(Role.ADMINISTRATOR, Role.USER)
+  async deleteUserHimself(@CurrentUser() user: AuthenticatedUser): Promise<void> {
+    await this.userService.deleteUser(user.id);
   }
 
-  @Get('getAllUser')
-  @SetMetadata('allow_to_roles', ['administrator'])
-  @UseGuards(RoleCheckerGuard)
-  async getAllUser(): Promise<User[]> {
+  @Get()
+  @Roles(Role.ADMINISTRATOR)
+  async getUsers(@Query('email') email?: string): Promise<User | User[] | null> {
+    if (email) {
+      return await this.userService.getUserByEmail(email);
+    }
     return await this.userService.getAllUser();
   }
 
-  @Post('getUserByEmail')
-  @SetMetadata('allow_to_roles', ['administrator'])
-  @UseGuards(RoleCheckerGuard)
-  async getUserByEmail(@Body() data: UserEmailDto): Promise<User | ApiResponse | null> {
-    return await this.userService.getUserByEmail(data);
+  @Get(':id')
+  @Roles(Role.ADMINISTRATOR, Role.USER)
+  async getUserById(
+    @Param('id', ParseIntPipe) userId: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<User> {
+    if (user.role !== Role.ADMINISTRATOR && user.id !== userId) {
+      throw new ForbiddenException('You are not allowed to view other user profiles.');
+    }
+    return await this.userService.getUserById(userId);
   }
 
-  @Post('getUserById/:id')
-  @SetMetadata('allow_to_roles', ['administrator', 'user'])
-  @UseGuards(RoleCheckerGuard)
-  async getUserById(@Param('id') userId: number): Promise<User | ApiResponse | null> {
-    return await this.userService.getUserById(userId);
+  @Delete(':id')
+  @Roles(Role.ADMINISTRATOR)
+  async deleteUserByAdministrator(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    await this.userService.deleteUser(id);
   }
 }
