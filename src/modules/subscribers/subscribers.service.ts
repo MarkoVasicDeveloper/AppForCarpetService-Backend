@@ -4,16 +4,16 @@ import { AddSubscribersDto } from 'src/modules/subscribers/dto/add-subscribers.d
 import { ApiResponse } from 'src/shared/response/api-response';
 import { Repository } from 'typeorm';
 
-import { Subscribers } from './subscribers.entity';
+import { Subscriber } from './subscriber.entity';
 
 @Injectable()
 export class SubscibersService {
   constructor(
-    @InjectRepository(Subscribers) private readonly subscribersService: Repository<Subscribers>,
+    @InjectRepository(Subscriber) private readonly subscribersService: Repository<Subscriber>,
   ) {}
 
-  async addSubscriber(data: AddSubscribersDto): Promise<Subscribers | ApiResponse> {
-    const subscriber = new Subscribers();
+  async addSubscriber(data: AddSubscribersDto): Promise<Subscriber | ApiResponse> {
+    const subscriber = new Subscriber();
     subscriber.userId = data.userId;
     subscriber.timeAt = data.timeAt;
     subscriber.expireAt = data.expireAt;
@@ -28,7 +28,7 @@ export class SubscibersService {
     return savedSubscriber;
   }
 
-  async findByUserId(userId: number): Promise<Subscribers[]> {
+  async findByUserId(userId: number): Promise<Subscriber[]> {
     const sub = await this.subscribersService.find({
       where: {
         userId: userId,

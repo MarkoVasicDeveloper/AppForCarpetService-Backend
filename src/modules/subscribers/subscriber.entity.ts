@@ -4,7 +4,7 @@ import { User } from '../user/user.entity';
 
 @Index('FK__user', ['userId'], {})
 @Entity('subscribers', { schema: 'apiperionica' })
-export class Subscribers {
+export class Subscriber {
   @PrimaryGeneratedColumn({
     type: 'int',
     name: 'subscribers_id',
