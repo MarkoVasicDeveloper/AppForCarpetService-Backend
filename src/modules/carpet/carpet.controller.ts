@@ -1,53 +1,70 @@
-import { Body, Controller, Get, Param, Post, SetMetadata, UseGuards } from '@nestjs/common';
-import { Carpet } from 'src/modules/carpet/carpet.entity';
-import { CarpetService } from 'src/modules/carpet/carpet.service';
-import { AddCarpetDto } from 'src/modules/carpet/dto/add-carpet.dto';
-import { DateCarpetDto } from 'src/modules/carpet/dto/date-carpet.dto';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
+import { CurrentUser } from 'src/shared/decorators/current-user.decorators';
+import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Role } from 'src/shared/enums/role.enum';
 import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
-import { ApiResponse } from 'src/shared/response/api-response';
 
-@Controller('api/carpet')
+import { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
+
+import { Carpet } from './carpet.entity';
+import { CarpetService } from './carpet.service';
+import { AddCarpetDto } from './dto/add-carpet.dto';
+import { EditCarpetDto } from './dto/edit-carpet.dto';
+import { GetCarpetsByDateDto } from './dto/get-carpets-by-date.dto';
+
+@Controller('carpets')
+@UseGuards(RoleCheckerGuard)
+@Roles(Role.USER, Role.ADMINISTRATOR, Role.WORKER)
 export class CarpetController {
   constructor(private readonly carpetService: CarpetService) {}
 
-  @Post('addCarpet/:userId')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
+  @Get('by-date')
+  async getCarpetsByDate(
+    @Query() query: GetCarpetsByDateDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Carpet[]> {
+    const ownerId = user.role === Role.WORKER ? user.userId! : user.id;
+    return await this.carpetService.getAllCarpetsByDate(query.date, ownerId);
+  }
+
+  @Get('client/:receptionId')
+  async getAllCarpetsByClientId(
+    @Param('receptionId', ParseIntPipe) receptionId: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Carpet[]> {
+    const ownerId = user.role === Role.WORKER ? user.userId! : user.id;
+    return await this.carpetService.getAllCarpetsByClientId(receptionId, ownerId);
+  }
+
+  @Post()
   async addCarpet(
     @Body() data: AddCarpetDto,
-    @Param('userId') userId: number,
-  ): Promise<Carpet | ApiResponse> {
-    return await this.carpetService.addCarpet(data, userId);
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Carpet> {
+    const ownerId = user.role === Role.WORKER ? user.userId! : user.id;
+
+    const creatorWorkerId = user.role === Role.WORKER ? user.id : undefined;
+
+    return await this.carpetService.addCarpet(data, ownerId, creatorWorkerId);
   }
 
-  @Post('editCarpet/:id/:userId')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
+  @Put(':id')
   async editCarpet(
-    @Body() data: AddCarpetDto,
-    @Param('id') carpetId: number,
-    @Param('userId') userId: number,
-  ): Promise<Carpet | ApiResponse> {
-    return await this.carpetService.editCarpet(data, carpetId, userId);
-  }
-
-  @Post('getCarpetByDate/:userId')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
-  async getCarpetByDate(
-    @Body() data: DateCarpetDto,
-    @Param('userId') userId: number,
-  ): Promise<Carpet[] | ApiResponse> {
-    return await this.carpetService.getAllCarpetByDate(data, userId);
-  }
-
-  @Get('getAllCarpetByClientId/:receptionId/:userId')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
-  async getAllCarpetByClientId(
-    @Param('userId') userId: number,
-    @Param('receptionId') receptionId: number,
-  ): Promise<Carpet[] | ApiResponse> {
-    return await this.carpetService.getAllCarpetByClientId(receptionId, userId);
+    @Param('id', ParseIntPipe) carpetId: number,
+    @Body() data: EditCarpetDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Carpet> {
+    const ownerId = user.role === Role.WORKER ? user.userId! : user.id;
+    return await this.carpetService.editCarpet(carpetId, data, ownerId);
   }
 }

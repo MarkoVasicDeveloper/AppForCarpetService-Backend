@@ -1,102 +1,101 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Carpet } from 'src/modules/carpet/carpet.entity';
-import { AddCarpetDto } from 'src/modules/carpet/dto/add-carpet.dto';
-import { DateCarpetDto } from 'src/modules/carpet/dto/date-carpet.dto';
-import { ApiResponse } from 'src/shared/response/api-response';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
+
+import { Carpet } from './carpet.entity';
+import { AddCarpetDto } from './dto/add-carpet.dto';
+import { EditCarpetDto } from './dto/edit-carpet.dto';
 
 @Injectable()
 export class CarpetService {
-  constructor(@InjectRepository(Carpet) private readonly carpetService: Repository<Carpet>) {}
+  constructor(
+    @InjectRepository(Carpet)
+    private readonly carpetRepository: Repository<Carpet>,
+  ) {}
 
-  async addCarpet(data: AddCarpetDto, userId: number): Promise<Carpet | ApiResponse> {
-    const carpet = new Carpet();
-    carpet.carpetReceptionUser = data.carpetReception;
-    carpet.width = data.width;
-    carpet.heigth = data.height;
-    carpet.price = data.price;
-    carpet.carpetSurface = data.width * data.height;
-    carpet.forPayment = data.width * data.height * data.price;
-    carpet.workerId = data.workerId;
-    carpet.deliveryTime = data.deliveryDate;
-    carpet.userId = userId;
-    carpet.clientsId = data.clientsId;
+  async addCarpet(data: AddCarpetDto, userId: number, creatorWorkerId?: number): Promise<Carpet> {
+    const finalWorkerId = creatorWorkerId ? creatorWorkerId : data.workerId;
 
-    const savedCarpet = await this.carpetService.save(carpet);
+    const carpet = this.carpetRepository.create({
+      carpetReceptionUser: data.carpetReception,
+      width: data.width,
+      height: data.height,
+      price: data.price,
+      workerId: finalWorkerId,
+      deliveryTime: data.deliveryDate,
+      userId: userId,
+      clientsId: data.clientsId,
+    });
 
-    if (!savedCarpet) {
-      return new ApiResponse(false, -11000, 'Catpet not saved');
+    this.calculateFinancials(carpet);
+
+    try {
+      return await this.carpetRepository.save(carpet);
+    } catch (error: unknown) {
+      if (error instanceof QueryFailedError) {
+        const dbError = error.driverError as { errno?: number; code?: string };
+        if (dbError.errno === 1452 || dbError.code === 'ER_NO_REFERENCED_ROW_2') {
+          throw new BadRequestException(
+            'Provided Client ID, Worker ID, or User ID does not exist.',
+          );
+        }
+      }
+      throw new InternalServerErrorException('Failed to save carpet to the database.');
     }
-
-    return savedCarpet;
   }
 
-  async editCarpet(
-    data: AddCarpetDto,
-    carpetId: number,
-    userId: number,
-  ): Promise<Carpet | ApiResponse> {
-    const carpet = await this.carpetService.findOne({
-      where: {
-        carpetId: carpetId,
-        userId: userId,
-      },
+  async editCarpet(carpetId: number, data: EditCarpetDto, userId: number): Promise<Carpet> {
+    const carpet = await this.carpetRepository.findOne({
+      where: { carpetId, userId },
     });
 
     if (!carpet) {
-      return new ApiResponse(false, -11001, 'Carpet is not found');
+      throw new NotFoundException(`Carpet with ID ${carpetId} for this user not found.`);
     }
 
-    carpet.carpetReceptionUser = data.carpetReception;
-    carpet.width = data.width;
-    carpet.heigth = data.height;
-    carpet.price = data.price;
-    carpet.carpetSurface = data.width * data.height;
-    carpet.forPayment = data.width * data.height * data.price;
-    carpet.workerId = data.workerId;
-    carpet.deliveryTime = data.deliveryDate;
+    if (data.carpetReception !== undefined) carpet.carpetReceptionUser = data.carpetReception;
+    if (data.width !== undefined) carpet.width = data.width;
+    if (data.height !== undefined) carpet.height = data.height;
+    if (data.price !== undefined) carpet.price = data.price;
+    if (data.workerId !== undefined) carpet.workerId = data.workerId;
+    if (data.deliveryDate !== undefined) carpet.deliveryTime = data.deliveryDate;
 
-    const savedCarpet = await this.carpetService.save(carpet);
+    this.calculateFinancials(carpet);
 
-    if (!savedCarpet) {
-      return new ApiResponse(false, -11000, 'Catpet not saved');
-    }
-
-    return savedCarpet;
+    return await this.carpetRepository.save(carpet);
   }
 
-  async getAllCarpetByDate(data: DateCarpetDto, userId: number): Promise<Carpet[] | ApiResponse> {
-    const dateString = data.data.toISOString().split('T')[0];
-    const carpets = await this.carpetService.find({
+  async getAllCarpetsByDate(dateString: string, userId: number): Promise<Carpet[]> {
+    const formattedDate = dateString.split('T')[0];
+
+    return await this.carpetRepository.find({
       where: {
-        deliveryTime: dateString,
-        userId: userId,
+        deliveryTime: formattedDate,
+        userId,
       },
     });
-
-    if (!carpets) {
-      return new ApiResponse(false, -11002, 'No carpet for delivery');
-    }
-
-    return carpets;
   }
 
-  async getAllCarpetByClientId(
-    carpetReceptionUser: number,
-    userId: number,
-  ): Promise<Carpet[] | ApiResponse> {
-    const allCarpet = await this.carpetService.find({
+  async getAllCarpetsByClientId(carpetReceptionUser: number, userId: number): Promise<Carpet[]> {
+    return await this.carpetRepository.find({
       where: {
-        carpetReceptionUser: carpetReceptionUser,
-        userId: userId,
+        carpetReceptionUser,
+        userId,
       },
     });
+  }
 
-    if (!allCarpet) {
-      return new ApiResponse(false, -11003, 'Not found');
-    }
+  private calculateFinancials(carpet: Carpet): void {
+    const width = Number(carpet.width) || 0;
+    const height = Number(carpet.height) || 0;
+    const price = Number(carpet.price) || 0;
 
-    return allCarpet;
+    carpet.carpetSurface = Number((width * height).toFixed(2));
+    carpet.forPayment = Number((carpet.carpetSurface * price).toFixed(2));
   }
 }

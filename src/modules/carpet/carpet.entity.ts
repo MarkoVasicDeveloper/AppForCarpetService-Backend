@@ -1,4 +1,15 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+
+import { Clients } from '../clients/clients.entity';
+import { User } from '../user/user.entity';
+import { Worker } from '../worker/worker.entity';
 
 @Entity('carpet', { schema: 'apiperionica' })
 export class Carpet {
@@ -8,40 +19,48 @@ export class Carpet {
   @Column('int', { name: 'carpet_reception_user', unsigned: true })
   carpetReceptionUser!: number;
 
-  @Column('int', {
-    name: 'carpet_reception',
-    nullable: true,
-    default: () => "'0'",
-  })
+  @Column('int', { name: 'carpet_reception', nullable: true, default: 0 })
   carpetReception!: number | null;
 
-  @Column('int', { name: 'width', default: () => "'0'" })
+  @Column('decimal', { precision: 5, scale: 2, default: 0 })
   width!: number;
 
-  @Column('int', { name: 'heigth', default: () => "'0'" })
-  heigth!: number;
+  @Column('decimal', { precision: 5, scale: 2, default: 0 })
+  height!: number;
 
-  @Column('int', { name: 'price', default: () => "'0'" })
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
   price!: number;
 
-  @Column('int', { name: 'carpet_surface' })
+  @Column('decimal', { name: 'carpet_surface', precision: 7, scale: 2 })
   carpetSurface!: number;
 
-  @Column('int', { name: 'for_payment' })
+  @Column('decimal', { name: 'for_payment', precision: 12, scale: 2 })
   forPayment!: number;
 
-  @Column('int', { name: 'worker_id' })
+  @Column('int', { name: 'worker_id', unsigned: true })
   workerId!: number;
 
-  @Column('date', { name: 'deliveryTime' })
-  deliveryTime!: string;
+  @ManyToOne(() => Worker, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'worker_id' })
+  worker!: Worker;
 
-  @Column('timestamp', { name: 'time_at', default: () => 'CURRENT_TIMESTAMP' })
-  timeAt!: Date;
-
-  @Column('int', { name: 'userId', unsigned: true })
+  @Column('int', { name: 'user_id', unsigned: true })
   userId!: number;
+
+  @ManyToOne(() => User, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user!: User;
 
   @Column('int', { name: 'clients_id', unsigned: true })
   clientsId!: number;
+
+  @ManyToOne(() => Clients, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'clients_id' })
+  client!: Clients;
+
+  @Column('date', { name: 'delivery_time' })
+  deliveryTime!: string;
+
+  @CreateDateColumn({ name: 'time_at' })
+  timeAt!: Date;
 }

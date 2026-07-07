@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Carpet } from 'src/modules/carpet/carpet.entity';
 
 import { CarpetController } from './carpet.controller';
+import { Carpet } from './carpet.entity';
 import { CarpetService } from './carpet.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Carpet])],
   controllers: [CarpetController],
   providers: [CarpetService],
-  exports: [CarpetService, TypeOrmModule],
+  exports: [CarpetService],
 })
 export class CarpetModule {}
