@@ -14,7 +14,7 @@ export class RefreshAdministratorToken {
   @Column('int', { name: 'administrator_id', unsigned: true })
   administratorId!: number;
 
-  @Column('text', { name: 'refresh_administrator_token' })
+  @Column({ type: 'text', name: 'refresh_administrator_token' })
   refreshAdministratorToken!: string;
 
   @Column('timestamp', {

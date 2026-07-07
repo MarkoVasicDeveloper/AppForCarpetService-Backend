@@ -111,4 +111,21 @@ export class UserMailerService {
       return oauthError;
     }
   }
+
+  async sendWelcomeEmail(email: string): Promise<void> {
+    const mailContent = new MailerDto();
+    mailContent.email = email;
+    mailContent.text = `
+      <div style="text-align: center; font-family: sans-serif;">
+        <h1 style="color: #fec400">Dobro došli</h1>
+        <p style="margin-bottom: 1rem">
+          Ovaj softver je besplatan i uvek će biti! 
+        </p> 
+        <p>
+          Klikom na ovaj link <a href="https://washersoftware.com/#/login">Log In</a> idete na stranicu za logovanje.
+        </p>               
+      </div>`;
+
+    await this.sendEmail(mailContent);
+  }
 }

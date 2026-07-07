@@ -6,6 +6,7 @@ export interface JwtPayload {
   role: Role;
   ipAddress: string;
   userAgent: string;
+  userId?: number;
   iat?: number;
   exp?: number;
 }
@@ -16,4 +17,5 @@ export interface AuthenticatedUser {
   role: Role;
   ipAddress: string;
   userAgent: string;
+  userId?: number;
 }

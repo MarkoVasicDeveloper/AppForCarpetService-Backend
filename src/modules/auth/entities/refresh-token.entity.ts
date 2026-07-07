@@ -15,7 +15,7 @@ export class RefreshToken {
   @Column('int', { name: 'user_id', unsigned: true })
   userId!: number;
 
-  @Column('text', { name: 'refresh_token' })
+  @Column({ type: 'text', name: 'refresh_token' })
   refreshToken!: string;
 
   @Column('timestamp', {
@@ -31,7 +31,7 @@ export class RefreshToken {
   isValid!: number;
 
   @ManyToOne(() => User, (user) => user.refreshTokens, {
-    onDelete: 'RESTRICT',
+    onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
   @JoinColumn([{ name: 'user_id', referencedColumnName: 'userId' }])

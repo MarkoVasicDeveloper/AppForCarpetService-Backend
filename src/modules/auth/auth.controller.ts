@@ -45,6 +45,6 @@ export class AuthController {
   @Roles(Role.ADMINISTRATOR)
   @HttpCode(HttpStatus.OK)
   async invalidateAllUserTokens(@Param('userId', ParseIntPipe) userId: number): Promise<void> {
-    return await this.authService.invalidAllUserTokens(userId);
+    return await this.authService.invalidateAllUserTokens(userId);
   }
 }
