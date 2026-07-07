@@ -9,6 +9,6 @@ import { CarpetService } from './carpet.service';
   imports: [TypeOrmModule.forFeature([Carpet])],
   controllers: [CarpetController],
   providers: [CarpetService],
-  exports: [CarpetService],
+  exports: [CarpetService, TypeOrmModule],
 })
 export class CarpetModule {}

@@ -2,7 +2,6 @@ import { Body, Controller, Get, Param, Post, SetMetadata, UseGuards } from '@nes
 import { CarpetReceptionsService } from 'src/modules/carpet-receptions/carpet-reception.service';
 import { AddCarpetReceptionDto } from 'src/modules/carpet-receptions/dto/add-carpet-reception.dto';
 import { EditCarpetReception } from 'src/modules/carpet-receptions/dto/edit-carpet-reception.dto';
-import { Clients } from 'src/modules/clients/clients.entity';
 import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
 import { ApiResponse } from 'src/shared/response/api-response';
 
@@ -18,7 +17,7 @@ export class CarpetReceptionController {
   async addReception(
     @Body() data: AddCarpetReceptionDto,
     @Param('id') workerId: number,
-  ): Promise<Clients | ApiResponse | null> {
+  ): Promise<CarpetReception> {
     return await this.carpetReceptionService.addCarpetReception(data, workerId);
   }
 

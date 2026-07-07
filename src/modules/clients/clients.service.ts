@@ -1,179 +1,95 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Clients } from 'src/modules/clients/clients.entity';
-import { AddClientsDto } from 'src/modules/clients/dto/add-clients.dto';
-import { EditClientDto } from 'src/modules/clients/dto/edit-client.dto';
-import { GetClientByAddressDto } from 'src/modules/clients/dto/get-client-by-address.dto';
-import { GetClientByNameDto } from 'src/modules/clients/dto/get-client-by-name.dto';
-import { GetClientBySurnameDto } from 'src/modules/clients/dto/get-client-by-surname.dto';
-import { ApiResponse } from 'src/shared/response/api-response';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository, ILike } from 'typeorm';
+
+import { Client } from './client.entity';
+import { AddClientsDto } from './dto/add-clients.dto';
+import { EditClientDto } from './dto/edit-client.dto';
 
 @Injectable()
 export class ClientsService {
-  constructor(@InjectRepository(Clients) private readonly clientsService: Repository<Clients>) {}
+  constructor(
+    @InjectRepository(Client)
+    private readonly clientRepository: Repository<Client>,
+  ) {}
 
-  async addClients(data: AddClientsDto, userId: number): Promise<Clients> {
-    const existingClient = await this.clientsService.findOne({
+  async addClients(data: AddClientsDto, userId: number): Promise<Client> {
+    const existingClient = await this.clientRepository.findOne({
       where: {
         name: data.name,
         surname: data.surname,
         address: data.address,
-        userId: userId,
+        userId,
       },
     });
 
     if (existingClient) {
-      return existingClient;
+      throw new ConflictException(
+        'Client with the same name, surname, and address already exists.',
+      );
     }
 
-    const clients = new Clients();
-    clients.name = data.name;
-    clients.surname = data.surname;
-    clients.address = data.address;
-    clients.userId = userId;
-    clients.phone = data.phone;
+    const client = this.clientRepository.create({
+      ...data,
+      userId,
+    });
 
-    const savedClient = await this.clientsService.save(clients);
-
-    return savedClient;
+    return await this.clientRepository.save(client);
   }
 
-  async editClient(data: EditClientDto, clientId: number): Promise<Clients | ApiResponse> {
-    const client = await this.clientsService.findOne({ where: { clientsId: clientId } });
+  async editClient(clientId: number, data: EditClientDto, userId: number): Promise<Client> {
+    const client = await this.clientRepository.findOne({ where: { clientsId: clientId, userId } });
 
     if (!client) {
-      return new ApiResponse(false, -4001, 'Client is not found');
+      throw new NotFoundException('Client not found or access denied');
     }
 
-    if (data.name) {
-      client.name = data.name;
-    }
+    this.clientRepository.merge(client, data);
 
-    if (data.surname) {
-      client.surname = data.surname;
-    }
-
-    if (data.address) {
-      client.address = data.address;
-    }
-
-    if (data.phone) {
-      client.phone = data.phone;
-    }
-
-    const savedClient = await this.clientsService.save(client);
-
-    return savedClient;
+    return await this.clientRepository.save(client);
   }
 
-  async getClientByNameSurnameAddress(
-    data: AddClientsDto,
-    userId: number,
-  ): Promise<Clients | ApiResponse> {
-    const client = await this.clientsService.findOne({
-      where: {
-        name: data.name,
-        surname: data.surname,
-        address: data.address,
-        userId: userId,
-      },
+  async getAllClients(userId: number): Promise<Client[]> {
+    return await this.clientRepository.find({ where: { userId } });
+  }
+
+  async getClientById(clientId: number, userId: number): Promise<Client> {
+    const client = await this.clientRepository.findOne({
+      where: { clientsId: clientId, userId },
+      relations: ['carpetReceptions'],
     });
 
     if (!client) {
-      return new ApiResponse(false, -4001, 'Client not found');
+      throw new NotFoundException('Client not found');
     }
 
     return client;
   }
 
-  async getAllClients(): Promise<Clients[]> {
-    return await this.clientsService.find();
-  }
+  async searchClients(
+    userId: number,
+    searchParams: { name?: string; surname?: string; address?: string },
+  ): Promise<Client[]> {
+    const whereClause: FindOptionsWhere<Client> = { userId };
 
-  async getClientById(clientId: number, userId: number): Promise<Clients | ApiResponse | null> {
-    const client = await this.clientsService.findOne({
-      where: {
-        clientsId: clientId,
-        userId: userId,
-      },
-    });
+    if (searchParams.name) whereClause.name = ILike(`%${searchParams.name}%`);
+    if (searchParams.surname) whereClause.surname = ILike(`%${searchParams.surname}%`);
+    if (searchParams.address) whereClause.address = ILike(`%${searchParams.address}%`);
 
-    if (!client) {
-      return new ApiResponse(false, -4001, 'Client is not found');
-    }
-
-    return await this.clientsService.findOne({ where: { clientsId: client.clientsId } });
-  }
-
-  async getClientByName(data: GetClientByNameDto): Promise<Clients | ApiResponse | null> {
-    const client = await this.clientsService.findOne({
-      where: {
-        name: data.name,
-      },
-    });
-
-    if (!client) {
-      return new ApiResponse(false, -4001, 'Client is not found');
-    }
-
-    return await this.clientsService.findOne({
-      where: { clientsId: client.clientsId },
+    return await this.clientRepository.find({
+      where: whereClause,
       relations: ['carpetReceptions'],
+      order: { name: 'ASC' },
     });
   }
 
-  async getClientBySurname(data: GetClientBySurnameDto): Promise<Clients | ApiResponse | null> {
-    const client = await this.clientsService.findOne({
-      where: {
-        surname: data.surname,
-      },
-    });
+  async deleteClient(clientId: number, userId: number): Promise<void> {
+    const client = await this.clientRepository.findOne({ where: { clientsId: clientId, userId } });
 
     if (!client) {
-      return new ApiResponse(false, -4001, 'Client is not found');
+      throw new NotFoundException('Client not found or access denied');
     }
 
-    return await this.clientsService.findOne({
-      where: { clientsId: client.clientsId },
-      relations: ['carpetReceptions'],
-    });
-  }
-
-  async getClientByAddress(data: GetClientByAddressDto): Promise<Clients | ApiResponse | null> {
-    const client = await this.clientsService.findOne({
-      where: {
-        address: data.address,
-      },
-    });
-
-    if (!client) {
-      return new ApiResponse(false, -4001, 'Client is not found');
-    }
-
-    return await this.clientsService.findOne({
-      where: { clientsId: client.clientsId },
-      relations: ['carpetReceptions'],
-    });
-  }
-
-  async deleteClient(clientId: number): Promise<Clients | ApiResponse> {
-    const client = await this.clientsService.findOne({ where: { clientsId: clientId } });
-
-    if (!client) {
-      return new ApiResponse(false, -4001, 'Client is not found');
-    }
-
-    const deleteClient = await this.clientsService.remove(client);
-
-    return deleteClient;
-  }
-
-  async deleteAllClients(): Promise<Clients[]> {
-    const allClients = await this.clientsService.find();
-
-    const result = await this.clientsService.remove(allClients);
-
-    return result;
+    await this.clientRepository.remove(client);
   }
 }

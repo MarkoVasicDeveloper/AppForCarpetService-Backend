@@ -1,6 +1,5 @@
-export class EditClientDto {
-  name?: string;
-  surname?: string;
-  address?: string;
-  phone?: string;
-}
+import { PartialType } from '@nestjs/mapped-types';
+
+import { AddClientsDto } from './add-clients.dto';
+
+export class EditClientDto extends PartialType(AddClientsDto) {}

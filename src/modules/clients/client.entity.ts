@@ -4,23 +4,23 @@ import { CarpetReception } from '../carpet-receptions/carpet-reception.entity';
 
 @Index('name_surname_address_user_id', ['name', 'surname', 'address', 'userId'], { unique: true })
 @Entity('clients', { schema: 'apiperionica' })
-export class Clients {
+export class Client {
   @PrimaryGeneratedColumn({ type: 'int', name: 'clients_id', unsigned: true })
   clientsId!: number;
 
-  @Column('varchar', { name: 'name', length: 50, default: () => "'0'" })
+  @Column('varchar', { name: 'name', length: 50 })
   name!: string;
 
-  @Column('varchar', { name: 'surname', length: 50, default: () => "'0'" })
+  @Column('varchar', { name: 'surname', length: 50 })
   surname!: string;
 
-  @Column('varchar', { name: 'address', length: 50, default: () => "'0'" })
+  @Column('varchar', { name: 'address', length: 50 })
   address!: string;
 
   @Column('timestamp', { name: 'time_at', default: () => 'CURRENT_TIMESTAMP' })
   timeAt!: Date;
 
-  @Column('int', { name: 'user_id', unsigned: true, default: () => "'0'" })
+  @Column('int', { name: 'user_id', unsigned: true })
   userId!: number;
 
   @Column('varchar', { name: 'phone', nullable: true, length: 50 })

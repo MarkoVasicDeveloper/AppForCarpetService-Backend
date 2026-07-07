@@ -6,7 +6,7 @@ import { ClientsReport } from 'src/modules/analysis/utils/clients-report';
 import { NumberOfCarpetReport } from 'src/modules/analysis/utils/number-of-carpet-report';
 import { SurfacePayReport } from 'src/modules/analysis/utils/surface-pay-report';
 import { Carpet } from 'src/modules/carpet/carpet.entity';
-import { Clients } from 'src/modules/clients/clients.entity';
+import { ClientsService } from 'src/modules/clients/clients.service';
 import { Between, MoreThan, Repository } from 'typeorm';
 
 import { CarpetReception } from '../carpet-receptions/carpet-reception.entity';
@@ -14,11 +14,11 @@ import { CarpetReception } from '../carpet-receptions/carpet-reception.entity';
 @Injectable()
 export class AnalysisService {
   constructor(
-    @InjectRepository(Clients)
-    private readonly clientsService: Repository<Clients>,
+    private readonly clientsService: ClientsService,
     @InjectRepository(CarpetReception)
     private readonly carpetReceptionService: Repository<CarpetReception>,
-    @InjectRepository(Carpet) private readonly carpetService: Repository<Carpet>,
+    @InjectRepository(Carpet)
+    private readonly carpetService: Repository<Carpet>,
   ) {}
 
   private async getReport(userId: number, date: string) {
@@ -103,15 +103,7 @@ export class AnalysisService {
 
     const filterDate = new Date(d);
 
-    const allClient = await this.clientsService.find({
-      where: {
-        timeAt: MoreThan(filterDate),
-        userId: userId,
-      },
-      order: {
-        timeAt: 'DESC',
-      },
-    });
+    const allClient = await this.clientsService.getAllClients(userId);
 
     const clientsLastSevenDay = ClientsReport(allClient);
 
@@ -157,12 +149,7 @@ export class AnalysisService {
     const startDate = new Date(d.toISOString().substring(0, 10) + 'T00:00:00');
     const endDate = new Date(endDateString + 'T23:59:59');
 
-    const allClient = await this.clientsService.find({
-      where: {
-        timeAt: Between(startDate, endDate),
-        userId: userId,
-      },
-    });
+    const allClient = await this.clientsService.getAllClients(userId);
 
     const clientsLastMonth = ClientsReport(allClient);
 

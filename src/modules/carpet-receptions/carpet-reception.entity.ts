@@ -1,6 +1,6 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-import { Clients } from '../clients/clients.entity';
+import { Client } from '../clients/client.entity';
 
 @Index('FK_carpet_reception_clients', ['clientsId'], {})
 @Index('user_id', ['userId'], {})
@@ -54,10 +54,10 @@ export class CarpetReception {
   @Column('timestamp', { name: 'date_at', default: () => 'CURRENT_TIMESTAMP' })
   dateAt!: Date;
 
-  @ManyToOne(() => Clients, (clients) => clients.carpetReceptions, {
+  @ManyToOne(() => Client, (client) => client.carpetReceptions, {
     onDelete: 'NO ACTION',
     onUpdate: 'CASCADE',
   })
   @JoinColumn([{ name: 'clients_id', referencedColumnName: 'clientsId' }])
-  clients!: Clients;
+  clients!: Client;
 }

@@ -1,98 +1,75 @@
-import { Body, Controller, Delete, Get, Param, Post, SetMetadata, UseGuards } from '@nestjs/common';
-import { Clients } from 'src/modules/clients/clients.entity';
-import { ClientsService } from 'src/modules/clients/clients.service';
-import { AddClientsDto } from 'src/modules/clients/dto/add-clients.dto';
-import { EditClientDto } from 'src/modules/clients/dto/edit-client.dto';
-import { GetClientByAddressDto } from 'src/modules/clients/dto/get-client-by-address.dto';
-import { GetClientByNameDto } from 'src/modules/clients/dto/get-client-by-name.dto';
-import { GetClientBySurnameDto } from 'src/modules/clients/dto/get-client-by-surname.dto';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+  ParseIntPipe,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { CurrentOwnerId } from 'src/shared/decorators/current-owner-id.decorator';
+import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Role } from 'src/shared/enums/role.enum';
 import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
-import { ApiResponse } from 'src/shared/response/api-response';
 
-@Controller('api/clients')
-export class ClientsContoller {
+import { Client } from './client.entity';
+import { ClientsService } from './clients.service';
+import { AddClientsDto } from './dto/add-clients.dto';
+import { EditClientDto } from './dto/edit-client.dto';
+import { SearchClientsDto } from './dto/search-clients.dto';
+
+@Controller('clients')
+@UseGuards(RoleCheckerGuard)
+@Roles(Role.USER, Role.ADMINISTRATOR, Role.WORKER)
+export class ClientsController {
   constructor(private readonly clientService: ClientsService) {}
 
-  @Post('addClient/:id')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user', 'administrator'])
-  async addClient(@Body() data: AddClientsDto, @Param('id') userId: number): Promise<Clients> {
-    return await this.clientService.addClients(data, userId);
+  @Post()
+  async addClient(@Body() data: AddClientsDto, @CurrentOwnerId() ownerId: number): Promise<Client> {
+    return await this.clientService.addClients(data, ownerId);
   }
 
-  @Post('editClient/:id')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
+  @Put(':id')
   async editClient(
+    @Param('id', ParseIntPipe) clientId: number,
     @Body() data: EditClientDto,
-    @Param('id') clientId: number,
-  ): Promise<Clients | ApiResponse> {
-    return await this.clientService.editClient(data, clientId);
+    @CurrentOwnerId() ownerId: number,
+  ): Promise<Client> {
+    return await this.clientService.editClient(clientId, data, ownerId);
   }
 
-  @Post('getClientByNameSurnameAddress/:id')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
-  async getClientByNameSurnameAddress(
-    @Body() data: AddClientsDto,
-    @Param('id') userId: number,
-  ): Promise<Clients | ApiResponse> {
-    return await this.clientService.getClientByNameSurnameAddress(data, userId);
+  @Get()
+  async getAllClients(@CurrentOwnerId() ownerId: number): Promise<Client[]> {
+    return await this.clientService.getAllClients(ownerId);
   }
 
-  @Get('getAllClients')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user', 'administrator'])
-  async getAllClients(): Promise<Clients[]> {
-    return await this.clientService.getAllClients();
+  @Get('search')
+  async searchClients(
+    @Query() query: SearchClientsDto,
+    @CurrentOwnerId() ownerId: number,
+  ): Promise<Client[]> {
+    return await this.clientService.searchClients(ownerId, query);
   }
 
-  @Get('getClientById/:id/:userId')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
+  @Get(':id')
   async getClientById(
-    @Param('id') clientId: number,
-    @Param('userId') userId: number,
-  ): Promise<Clients | ApiResponse | null> {
-    return await this.clientService.getClientById(clientId, userId);
+    @Param('id', ParseIntPipe) clientId: number,
+    @CurrentOwnerId() ownerId: number,
+  ): Promise<Client> {
+    return await this.clientService.getClientById(clientId, ownerId);
   }
 
-  @Post('getClientsByName')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
-  async getClientByName(@Body() data: GetClientByNameDto): Promise<Clients | ApiResponse | null> {
-    return await this.clientService.getClientByName(data);
-  }
-
-  @Post('getClientsBySurname')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
-  async getClientsBySurname(
-    @Body() data: GetClientBySurnameDto,
-  ): Promise<Clients | ApiResponse | null> {
-    return await this.clientService.getClientBySurname(data);
-  }
-
-  @Post('getClientsByAddress')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
-  async getClientsByAddress(
-    @Body() data: GetClientByAddressDto,
-  ): Promise<Clients | ApiResponse | null> {
-    return await this.clientService.getClientByAddress(data);
-  }
-
-  @Delete('deleteClient/:id')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
-  async deleteClient(@Param('id') clientId: number): Promise<Clients | ApiResponse> {
-    return await this.clientService.deleteClient(clientId);
-  }
-
-  @Delete('deleteAllClient')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
-  async deleteAllClient(): Promise<Clients[]> {
-    return await this.clientService.deleteAllClients();
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteClient(
+    @Param('id', ParseIntPipe) clientId: number,
+    @CurrentOwnerId() ownerId: number,
+  ): Promise<void> {
+    await this.clientService.deleteClient(clientId, ownerId);
   }
 }

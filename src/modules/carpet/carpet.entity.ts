@@ -7,7 +7,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 
-import { Clients } from '../clients/clients.entity';
+import { Client } from '../clients/client.entity';
 import { User } from '../user/user.entity';
 import { Worker } from '../worker/worker.entity';
 
@@ -54,9 +54,9 @@ export class Carpet {
   @Column('int', { name: 'clients_id', unsigned: true })
   clientsId!: number;
 
-  @ManyToOne(() => Clients, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @ManyToOne(() => Client, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'clients_id' })
-  client!: Clients;
+  client!: Client;
 
   @Column('date', { name: 'delivery_time' })
   deliveryTime!: string;

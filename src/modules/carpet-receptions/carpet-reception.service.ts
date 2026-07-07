@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddCarpetReceptionDto } from 'src/modules/carpet-receptions/dto/add-carpet-reception.dto';
 import { EditCarpetReception } from 'src/modules/carpet-receptions/dto/edit-carpet-reception.dto';
-import { Clients } from 'src/modules/clients/clients.entity';
 import { ApiResponse } from 'src/shared/response/api-response';
 import { Repository } from 'typeorm';
+
+import { ClientsService } from '../clients/clients.service';
 
 import { CarpetReception } from './carpet-reception.entity';
 
@@ -13,18 +14,17 @@ export class CarpetReceptionsService {
   constructor(
     @InjectRepository(CarpetReception)
     private readonly carpetReception: Repository<CarpetReception>,
-    @InjectRepository(Clients)
-    private readonly clientsService: Repository<Clients>,
+    private readonly clientsService: ClientsService,
   ) {}
 
   async addCarpetReception(
     data: AddCarpetReceptionDto,
     workerId: number,
-  ): Promise<Clients | ApiResponse | null> {
-    const client = await this.clientsService.findOne({ where: { clientsId: data.clientsId } });
+  ): Promise<CarpetReception> {
+    const client = await this.clientsService.getClientById(data.clientsId, 1);
 
     if (!client) {
-      return new ApiResponse(false, -4001, 'Client is not found');
+      throw new NotFoundException('Reception is not found or access denied');
     }
 
     const carpet = new CarpetReception();
@@ -38,10 +38,7 @@ export class CarpetReceptionsService {
 
     await this.carpetReception.save(carpet);
 
-    return await this.clientsService.findOne({
-      where: { clientsId: client.clientsId },
-      relations: ['carpetReceptions'],
-    });
+    return await this.carpetReception.save(carpet);
   }
 
   async editCarpetReception(
