@@ -1,196 +1,128 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { AnalysisInfo } from 'src/modules/analysis/utils/analysis-info';
 import { AnalysisReportInfo } from 'src/modules/analysis/utils/analysis-report.info';
 import { ClientsReport } from 'src/modules/analysis/utils/clients-report';
 import { NumberOfCarpetReport } from 'src/modules/analysis/utils/number-of-carpet-report';
 import { SurfacePayReport } from 'src/modules/analysis/utils/surface-pay-report';
-import { Carpet } from 'src/modules/carpet/carpet.entity';
 import { ClientsService } from 'src/modules/clients/clients.service';
-import { Between, MoreThan, Repository } from 'typeorm';
 
-import { CarpetReception } from '../carpet-receptions/carpet-reception.entity';
+import { CarpetService } from '../carpet/carpet.service';
+import { CarpetReceptionsService } from '../carpet-receptions/carpet-reception.service';
 
 @Injectable()
 export class AnalysisService {
   constructor(
     private readonly clientsService: ClientsService,
-    @InjectRepository(CarpetReception)
-    private readonly carpetReceptionService: Repository<CarpetReception>,
-    @InjectRepository(Carpet)
-    private readonly carpetService: Repository<Carpet>,
+    private readonly carpetReceptionsService: CarpetReceptionsService,
+    private readonly carpetService: CarpetService,
   ) {}
 
-  private async getReport(userId: number, date: string) {
-    const filterDate = new Date(date);
-    const allReceptions = await this.carpetReceptionService.find({
-      where: {
-        dateAt: MoreThan(filterDate),
-        userId: userId,
-      },
-    });
+  private async getAggregateReport(
+    userId: number,
+    startDate: Date,
+    endDate: Date = new Date(),
+  ): Promise<AnalysisInfo> {
+    const [receptionStats, carpetStats] = await Promise.all([
+      this.carpetReceptionsService.getReceptionAnalysisStats(userId, startDate, endDate),
+      this.carpetService.getCarpetAnalysisStats(userId, startDate, endDate),
+    ]);
 
-    const carpetInfo = allReceptions.reduce(
-      (total, item) => {
-        const carpet = item.numberOfCarpet ?? 0;
-        const tracks = item.numberOfTracks ?? 0;
-
-        total.numberOfClients += 1;
-        total.numberOfCarpet += carpet;
-        total.numberOfTracks += tracks;
-        return total;
-      },
-      { numberOfClients: 0, numberOfCarpet: 0, numberOfTracks: 0 },
-    );
-
-    const allCarpet = await this.carpetService.find({
-      where: {
-        timeAt: MoreThan(filterDate),
-        userId: userId,
-      },
-    });
-
-    const surfaceAndForPayment = allCarpet.reduce(
-      (total, item) => {
-        total.surface += Number(item.carpetSurface ?? 0);
-        total.forPay += Number(item.forPayment ?? 0);
-        return total;
-      },
-      { surface: 0, forPay: 0 },
-    );
-
-    return new AnalysisInfo(
-      carpetInfo.numberOfClients,
-      carpetInfo.numberOfCarpet,
-      carpetInfo.numberOfTracks,
-      surfaceAndForPayment.surface,
-      surfaceAndForPayment.forPay,
-    );
+    return {
+      numberOfClients: receptionStats.numberOfClients,
+      numberOfCarpet: receptionStats.numberOfCarpet,
+      numberOfTracks: receptionStats.numberOfTracks,
+      totalSurface: carpetStats.surface,
+      totalPrice: carpetStats.forPay,
+    };
   }
 
   async getDailyReport(userId: number): Promise<AnalysisInfo> {
-    const date = new Date().toISOString().substring(0, 10) + ' 00:00:00';
-    return await this.getReport(userId, date);
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    return this.getAggregateReport(userId, startOfDay);
   }
 
-  async theWeeklyReport(userId: number): Promise<AnalysisInfo> {
-    const d = new Date();
-    d.setDate(d.getDate() - 7);
-    const date = d.toISOString().substring(0, 19).replace('T', ' ');
-
-    return await this.getReport(userId, date);
+  async getWeeklyReport(userId: number): Promise<AnalysisInfo> {
+    const startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - 7);
+    return this.getAggregateReport(userId, startOfWeek);
   }
 
-  async theMontlyReport(userId: number): Promise<AnalysisInfo> {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    const date = d.toISOString().substring(0, 19).replace('T', ' ');
-
-    return await this.getReport(userId, date);
+  async getMonthlyReport(userId: number): Promise<AnalysisInfo> {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(startOfMonth.getDate() - 30);
+    return this.getAggregateReport(userId, startOfMonth);
   }
 
-  async theYearReport(userId: number): Promise<AnalysisInfo> {
-    const d = new Date();
-    d.setDate(d.getDate() - 365);
-    const date = d.toISOString().substring(0, 19).replace('T', ' ');
-
-    return await this.getReport(userId, date);
+  async getYearReport(userId: number): Promise<AnalysisInfo> {
+    const startOfYear = new Date();
+    startOfYear.setDate(startOfYear.getDate() - 365);
+    return this.getAggregateReport(userId, startOfYear);
   }
 
-  async lastSevenDayReport(userId: number) {
-    const d = new Date();
-    d.setDate(d.getDate() - 8);
+  async lastSevenDayReport(userId: number): Promise<AnalysisReportInfo> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date();
 
-    const filterDate = new Date(d);
+    const [allClients, allReceptions, allCarpets] = await Promise.all([
+      this.clientsService.getAllClients(userId),
+      this.carpetReceptionsService.getReceptionsForAnalysis(userId, startDate, endDate),
+      this.carpetService.getCarpetsForAnalysis(userId, startDate, endDate),
+    ]);
 
-    const allClient = await this.clientsService.getAllClients(userId);
-
-    const clientsLastSevenDay = ClientsReport(allClient);
-
-    const allReceptions = await this.carpetReceptionService.find({
-      where: {
-        dateAt: MoreThan(filterDate),
-        userId: userId,
-      },
-      order: {
-        timeAt: 'DESC',
-      },
-    });
-
-    const carpetLastSevenDay = NumberOfCarpetReport(
-      allReceptions.map((reception) => ({
-        ...reception,
-        numberOfCarpet: reception.numberOfCarpet ?? 0,
-        numberOfTracks: reception.numberOfTracks ?? 0,
-      })),
-    );
-
-    const allCarpet = await this.carpetService.find({
-      where: {
-        timeAt: MoreThan(filterDate),
-        userId: userId,
-      },
-      order: {
-        timeAt: 'DESC',
-      },
-    });
-
-    const surfacePayLastSevenDay = SurfacePayReport(allCarpet);
-
-    return new AnalysisReportInfo(clientsLastSevenDay, carpetLastSevenDay, surfacePayLastSevenDay);
+    return {
+      clients: ClientsReport(allClients),
+      numberOfCarpet: NumberOfCarpetReport(
+        allReceptions.map((r) => ({
+          ...r,
+          numberOfCarpet: r.numberOfCarpet ?? 0,
+          numberOfTracks: r.numberOfTracks ?? 0,
+        })),
+      ),
+      surfaceAndForPayment: SurfacePayReport(allCarpets),
+    };
   }
 
-  async montryReport(userId: number, data?: string) {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
+  async monthlyReport(userId: number, customEndDate?: string): Promise<AnalysisReportInfo> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    startDate.setHours(0, 0, 0, 0);
 
-    const endDateString = data ? data : new Date().toISOString().substring(0, 10);
+    const endDate = customEndDate ? new Date(customEndDate + 'T23:59:59') : new Date();
 
-    const startDate = new Date(d.toISOString().substring(0, 10) + 'T00:00:00');
-    const endDate = new Date(endDateString + 'T23:59:59');
+    const [allClients, allReceptions, allCarpets] = await Promise.all([
+      this.clientsService.getAllClients(userId),
+      this.carpetReceptionsService.getReceptionsForAnalysis(userId, startDate, endDate),
+      this.carpetService.getCarpetsForAnalysis(userId, startDate, endDate),
+    ]);
 
-    const allClient = await this.clientsService.getAllClients(userId);
-
-    const clientsLastMonth = ClientsReport(allClient);
-
-    const allReceptions = await this.carpetReceptionService.find({
-      where: {
-        timeAt: Between(startDate, endDate),
-        userId: userId,
-      },
-    });
-
-    const carpetLastMonth = NumberOfCarpetReport(
-      allReceptions.map((reception) => ({
-        ...reception,
-        numberOfCarpet: reception.numberOfCarpet ?? 0,
-        numberOfTracks: reception.numberOfTracks ?? 0,
-      })),
-    );
-
-    const allCarpet = await this.carpetService.find({
-      where: {
-        timeAt: Between(startDate, endDate),
-        userId: userId,
-      },
-    });
-
-    const surfaceAndPayLastMonth = SurfacePayReport(allCarpet);
-
-    return new AnalysisReportInfo(clientsLastMonth, carpetLastMonth, surfaceAndPayLastMonth);
+    return {
+      clients: ClientsReport(allClients),
+      numberOfCarpet: NumberOfCarpetReport(
+        allReceptions.map((r) => ({
+          ...r,
+          numberOfCarpet: r.numberOfCarpet ?? 0,
+          numberOfTracks: r.numberOfTracks ?? 0,
+        })),
+      ),
+      surfaceAndForPayment: SurfacePayReport(allCarpets),
+    };
   }
 
-  async yearReport(userId: number) {
-    const d = new Date();
-    const m = d.getMonth();
-    const y = d.getFullYear();
-
+  async yearReport(userId: number): Promise<[string, AnalysisReportInfo][]> {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
     const months: [string, AnalysisReportInfo][] = [];
 
     for (let i = 0; i < 12; i++) {
-      const month = new Date(y, m - i, 1).toISOString().split('T')[0];
-      const ad = await this.montryReport(userId, month);
-      months.push([month, ad]);
+      const targetDate = new Date(currentYear, currentMonth - i, 1);
+      const monthStr = targetDate.toISOString().split('T')[0];
+
+      const reportData = await this.monthlyReport(userId, monthStr);
+      months.push([monthStr, reportData]);
     }
 
     return months;

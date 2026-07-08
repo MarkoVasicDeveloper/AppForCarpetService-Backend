@@ -12,6 +12,6 @@ import { CarpetReceptionsService } from './carpet-reception.service';
   imports: [TypeOrmModule.forFeature([CarpetReception]), CarpetModule, ClientsModule],
   controllers: [CarpetReceptionController],
   providers: [CarpetReceptionsService],
-  exports: [CarpetReceptionsService, TypeOrmModule],
+  exports: [CarpetReceptionsService],
 })
 export class CarpetReceptionModule {}

@@ -1,15 +1,7 @@
-export class AnalysisReportInfo {
-  clients: Record<string, unknown>;
-  numberOfCarpet: Record<string, unknown>;
-  surfaceAndForPayment: Record<string, unknown>;
+import { DailyCountReport, DailySurfacePayReport } from './report-types';
 
-  constructor(
-    clients: Record<string, unknown>,
-    numberOfCarpet: Record<string, unknown>,
-    surfaceAndForPayment: Record<string, unknown>,
-  ) {
-    ((this.clients = clients),
-      (this.numberOfCarpet = numberOfCarpet),
-      (this.surfaceAndForPayment = surfaceAndForPayment));
-  }
+export interface AnalysisReportInfo {
+  clients: DailyCountReport;
+  numberOfCarpet: DailyCountReport;
+  surfaceAndForPayment: DailySurfacePayReport;
 }

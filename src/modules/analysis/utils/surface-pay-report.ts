@@ -1,35 +1,24 @@
-interface ISurfacePayDailyData {
-  surface: number;
-  forPayment: number;
+import { DailySurfacePayReport, IReportItem, formatDateKey } from './report-types';
+
+interface ISurfacePayItem extends IReportItem {
+  carpetSurface: number | string | null;
+  forPayment: number | string | null;
 }
 
-interface ISurfacePayReportResult {
-  [date: string]: ISurfacePayDailyData;
-}
+export function SurfacePayReport(array: ISurfacePayItem[]): DailySurfacePayReport {
+  return array.reduce<DailySurfacePayReport>((total, item) => {
+    const date = formatDateKey(item.timeAt);
 
-interface ISurfacePayItem {
-  timeAt: Date | string;
-  carpetSurface: number;
-  forPayment: number;
-}
+    const currentSurface = Number(item.carpetSurface ?? 0);
+    const currentPayment = Number(item.forPayment ?? 0);
 
-export function SurfacePayReport(array: ISurfacePayItem[]): ISurfacePayReportResult {
-  const surfacePay = array.reduce((total: ISurfacePayReportResult, item) => {
-    const dateObject = item.timeAt instanceof Date ? item.timeAt : new Date(item.timeAt);
+    const existing = total[date] || { surface: 0, forPayment: 0 };
 
-    const date = dateObject.toISOString().split('T')[0];
+    total[date] = {
+      surface: Number((existing.surface + currentSurface).toFixed(2)),
+      forPayment: Number((existing.forPayment + currentPayment).toFixed(2)),
+    };
 
-    if (total[date]) {
-      total[date].surface += item.carpetSurface ?? 0;
-      total[date].forPayment += item.forPayment ?? 0;
-    } else {
-      total[date] = {
-        surface: item.carpetSurface ?? 0,
-        forPayment: item.forPayment ?? 0,
-      };
-    }
     return total;
   }, {});
-
-  return surfacePay;
 }

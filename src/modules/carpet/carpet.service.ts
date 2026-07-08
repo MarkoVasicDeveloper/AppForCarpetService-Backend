@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { Between, QueryFailedError, Repository } from 'typeorm';
 
 import { Carpet } from './carpet.entity';
 import { AddCarpetDto } from './dto/add-carpet.dto';
@@ -87,6 +87,35 @@ export class CarpetService {
         carpetReceptionUser,
         userId,
       },
+    });
+  }
+
+  async getCarpetAnalysisStats(
+    userId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<{ surface: number; forPay: number }> {
+    const result = await this.carpetRepository
+      .createQueryBuilder('carpet')
+      .select('SUM(COALESCE(carpet.carpetSurface, 0))', 'surface')
+      .addSelect('SUM(COALESCE(carpet.forPayment, 0))', 'forPay')
+      .where('carpet.userId = :userId', { userId })
+      .andWhere('carpet.timeAt BETWEEN :startDate AND :endDate', { startDate, endDate })
+      .getRawOne();
+
+    return {
+      surface: Number(result?.surface || 0),
+      forPay: Number(result?.forPay || 0),
+    };
+  }
+
+  async getCarpetsForAnalysis(userId: number, startDate: Date, endDate: Date): Promise<Carpet[]> {
+    return await this.carpetRepository.find({
+      where: {
+        userId,
+        timeAt: Between(startDate, endDate),
+      },
+      order: { timeAt: 'DESC' },
     });
   }
 

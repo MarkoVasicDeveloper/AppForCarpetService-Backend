@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 
 import { ClientsService } from '../clients/clients.service';
 
@@ -114,6 +114,41 @@ export class CarpetReceptionsService {
         userId: userId,
       },
       relations: ['client'],
+    });
+  }
+
+  async getReceptionAnalysisStats(
+    userId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<{ numberOfClients: number; numberOfCarpet: number; numberOfTracks: number }> {
+    const result = await this.carpetReceptionRepo
+      .createQueryBuilder('reception')
+      .select('COUNT(reception.carpetReception)', 'numberOfClients')
+      .addSelect('SUM(COALESCE(reception.number_of_carpet, 0))', 'numberOfCarpet')
+      .addSelect('SUM(COALESCE(reception.number_of_tracks, 0))', 'numberOfTracks')
+      .where('reception.userId = :userId', { userId })
+      .andWhere('reception.dateAt BETWEEN :startDate AND :endDate', { startDate, endDate })
+      .getRawOne();
+
+    return {
+      numberOfClients: Number(result?.numberOfClients || 0),
+      numberOfCarpet: Number(result?.numberOfCarpet || 0),
+      numberOfTracks: Number(result?.numberOfTracks || 0),
+    };
+  }
+
+  async getReceptionsForAnalysis(
+    userId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<CarpetReception[]> {
+    return await this.carpetReceptionRepo.find({
+      where: {
+        userId,
+        timeAt: Between(startDate, endDate),
+      },
+      order: { timeAt: 'DESC' },
     });
   }
 }
