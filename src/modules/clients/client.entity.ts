@@ -26,6 +26,6 @@ export class Client {
   @Column('varchar', { name: 'phone', nullable: true, length: 50 })
   phone!: string | null;
 
-  @OneToMany(() => CarpetReception, (carpetReception) => carpetReception.clients)
+  @OneToMany(() => CarpetReception, (carpetReception) => carpetReception.client)
   carpetReceptions!: CarpetReception[];
 }

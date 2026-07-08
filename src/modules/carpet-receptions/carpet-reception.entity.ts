@@ -6,11 +6,7 @@ import { Client } from '../clients/client.entity';
 @Index('user_id', ['userId'], {})
 @Entity('carpet_reception', { schema: 'apiperionica' })
 export class CarpetReception {
-  @PrimaryGeneratedColumn({
-    type: 'int',
-    name: 'carpet_reception',
-    unsigned: true,
-  })
+  @PrimaryGeneratedColumn({ type: 'int', name: 'carpet_reception', unsigned: true })
   carpetReception!: number;
 
   @Column('int', { name: 'carpet_reception_user', unsigned: true })
@@ -40,12 +36,7 @@ export class CarpetReception {
   @Column('tinyint', { name: 'prepare', width: 1, default: () => "'0'" })
   prepare!: boolean;
 
-  @Column('tinyint', {
-    name: 'delivered',
-    nullable: true,
-    width: 1,
-    default: () => "'0'",
-  })
+  @Column('tinyint', { name: 'delivered', nullable: true, width: 1, default: () => "'0'" })
   delivered!: boolean | null;
 
   @Column('datetime', { name: 'deliveryTime', nullable: true })
@@ -55,9 +46,9 @@ export class CarpetReception {
   dateAt!: Date;
 
   @ManyToOne(() => Client, (client) => client.carpetReceptions, {
-    onDelete: 'NO ACTION',
+    onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
   @JoinColumn([{ name: 'clients_id', referencedColumnName: 'clientsId' }])
-  clients!: Client;
+  client!: Client;
 }
