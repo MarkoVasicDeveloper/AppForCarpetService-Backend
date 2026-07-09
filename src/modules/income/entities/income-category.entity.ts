@@ -1,15 +1,15 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('income', { schema: 'apiperionica' })
+@Entity('income_categories', { schema: 'apiperionica' })
 export class IncomeCategory {
   @PrimaryGeneratedColumn({ type: 'int', name: 'income_id', unsigned: true })
-  incomeId!: number;
+  id!: number;
 
-  @Column('varchar', { name: 'name', length: 255, default: () => "'0'" })
+  @Column('varchar', { name: 'name', length: 255 })
   name!: string;
 
-  @Column('varchar', { name: 'price', length: 50, default: () => "'0'" })
-  price!: string;
+  @Column('int', { name: 'price', unsigned: true })
+  price!: number;
 
   @Column('int', { name: 'user_id', unsigned: true })
   userId!: number;

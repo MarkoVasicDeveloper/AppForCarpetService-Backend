@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ApiResponse } from 'src/shared/response/api-response';
 import { Repository } from 'typeorm';
 
 import { AddIncomeCategoryDto } from './dto/add-income-category.dto';
@@ -14,90 +13,82 @@ import { IncomeEntry } from './entities/income-entry.entity';
 export class IncomeService {
   constructor(
     @InjectRepository(IncomeCategory)
-    private readonly categoryRepo: Repository<IncomeCategory>,
+    private readonly categoryRepository: Repository<IncomeCategory>,
 
     @InjectRepository(IncomeEntry)
-    private readonly entryRepo: Repository<IncomeEntry>,
+    private readonly entryRepository: Repository<IncomeEntry>,
   ) {}
 
-  async addCategory(
-    data: AddIncomeCategoryDto,
-    userId: number,
-  ): Promise<IncomeCategory | ApiResponse> {
-    const exists = await this.categoryRepo.findOne({
-      where: {
-        name: data.name,
-        price: data.price,
-        userId: userId,
-      },
+  async addCategory(data: AddIncomeCategoryDto, userId: number): Promise<IncomeCategory> {
+    const exists = await this.categoryRepository.findOne({
+      where: { name: data.name, userId },
     });
 
-    if (exists) return new ApiResponse(false, -11001, 'Income category already exists!');
+    if (exists) {
+      throw new ConflictException('Income category with this name already exists.');
+    }
 
-    const category = new IncomeCategory();
-    category.name = data.name;
-    category.price = data.price;
-    category.userId = userId;
-
-    return await this.categoryRepo.save(category);
+    const category = this.categoryRepository.create({ ...data, userId });
+    return await this.categoryRepository.save(category);
   }
 
   async editCategory(
-    data: EditIncomeCategoryDto,
+    id: number,
     userId: number,
-  ): Promise<IncomeCategory | ApiResponse> {
-    const category = await this.categoryRepo.findOne({
-      where: {
-        userId: userId,
-        incomeId: data.incomeId,
-      },
+    data: EditIncomeCategoryDto,
+  ): Promise<IncomeCategory> {
+    const category = await this.categoryRepository.findOne({
+      where: { id, userId },
     });
 
-    if (!category) return new ApiResponse(false, -11002, 'Income category not found');
+    if (!category) {
+      throw new NotFoundException('Income category not found.');
+    }
 
-    if (data.name) category.name = data.name;
-    if (data.price) category.price = data.price;
-
-    return await this.categoryRepo.save(category);
+    this.categoryRepository.merge(category, data);
+    return await this.categoryRepository.save(category);
   }
 
   async getAllCategories(userId: number): Promise<IncomeCategory[]> {
-    return await this.categoryRepo.find({
-      where: { userId: userId },
+    return await this.categoryRepository.find({ where: { userId } });
+  }
+
+  async deleteCategory(id: number, userId: number): Promise<void> {
+    const result = await this.categoryRepository.delete({ id, userId });
+    if (result.affected === 0) {
+      throw new NotFoundException('Income category not found or access denied.');
+    }
+  }
+
+  async addEntry(data: AddIncomeEntryDto, userId: number): Promise<IncomeEntry> {
+    const entry = this.entryRepository.create({ ...data, userId });
+    return await this.entryRepository.save(entry);
+  }
+
+  async editEntry(id: number, userId: number, data: EditIncomeEntryDto): Promise<IncomeEntry> {
+    const entry = await this.entryRepository.findOne({
+      where: { id, userId },
+    });
+
+    if (!entry) {
+      throw new NotFoundException('Income entry not found.');
+    }
+
+    this.entryRepository.merge(entry, data);
+    return await this.entryRepository.save(entry);
+  }
+
+  async getAllEntriesFromCategory(incomeId: number, userId: number): Promise<IncomeEntry[]> {
+    return await this.entryRepository.find({
+      where: { incomeId, userId },
+      order: { dateAt: 'DESC' },
     });
   }
 
-  async addEntry(data: AddIncomeEntryDto): Promise<IncomeEntry | ApiResponse> {
-    const entry = new IncomeEntry();
-    entry.incomeId = data.incomeId;
-    entry.value = data.value;
-    entry.userId = data.userId;
-
-    return await this.entryRepo.save(entry);
-  }
-
-  async editEntry(data: EditIncomeEntryDto): Promise<IncomeEntry | ApiResponse> {
-    const entry = await this.entryRepo.findOne({
-      where: {
-        userId: data.userId,
-        incomeId: data.incomeId,
-      },
-    });
-
-    if (!entry) return new ApiResponse(false, -12001, 'Entry not found');
-
-    if (data.incomeId) entry.incomeId = data.incomeId;
-    if (data.value) entry.value = data.value;
-
-    return await this.entryRepo.save(entry);
-  }
-
-  async getAllEntriesFromCategory(userId: number, incomeId: number): Promise<IncomeEntry[]> {
-    return await this.entryRepo.find({
-      where: {
-        userId: userId,
-        incomeId: incomeId,
-      },
-    });
+  async deleteEntry(id: number, userId: number): Promise<void> {
+    const result = await this.entryRepository.delete({ id, userId });
+    if (result.affected === 0) {
+      throw new NotFoundException('Income entry not found or access denied.');
+    }
   }
 }

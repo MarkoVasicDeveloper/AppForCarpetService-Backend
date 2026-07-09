@@ -1,6 +1,20 @@
-import { Body, Controller, Get, Param, Post, SetMetadata, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { CurrentOwnerId } from 'src/shared/decorators/current-owner-id.decorator';
+import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Role } from 'src/shared/enums/role.enum';
 import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
-import { ApiResponse } from 'src/shared/response/api-response';
 
 import { AddIncomeCategoryDto } from './dto/add-income-category.dto';
 import { AddIncomeEntryDto } from './dto/add-income-entry.dto';
@@ -10,48 +24,74 @@ import { IncomeCategory } from './entities/income-category.entity';
 import { IncomeEntry } from './entities/income-entry.entity';
 import { IncomeService } from './income.service';
 
-@Controller('api/income')
+@Controller('incomes')
 @UseGuards(RoleCheckerGuard)
-@SetMetadata('allow_to_roles', ['user', 'administrator'])
+@Roles(Role.ADMINISTRATOR, Role.USER)
 export class IncomeController {
   constructor(private readonly incomeService: IncomeService) {}
 
-  @Post('category/add/:userId')
+  @Post('categories')
   async addCategory(
+    @CurrentOwnerId() userId: number,
     @Body() data: AddIncomeCategoryDto,
-    @Param('userId') userId: number,
-  ): Promise<IncomeCategory | ApiResponse> {
+  ): Promise<IncomeCategory> {
     return await this.incomeService.addCategory(data, userId);
   }
 
-  @Post('category/edit/:userId')
+  @Patch('categories/:id')
   async editCategory(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() data: EditIncomeCategoryDto,
-    @Param('userId') userId: number,
-  ): Promise<IncomeCategory | ApiResponse> {
-    return await this.incomeService.editCategory(data, userId);
+  ): Promise<IncomeCategory> {
+    return await this.incomeService.editCategory(id, userId, data);
   }
 
-  @Get('category/all/:userId')
-  async getAllCategories(@Param('userId') userId: number): Promise<IncomeCategory[]> {
+  @Get('categories')
+  async getAllCategories(@CurrentOwnerId() userId: number): Promise<IncomeCategory[]> {
     return await this.incomeService.getAllCategories(userId);
   }
 
-  @Post('entry/add')
-  async addEntry(@Body() data: AddIncomeEntryDto): Promise<IncomeEntry | ApiResponse> {
-    return await this.incomeService.addEntry(data);
+  @Delete('categories/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteCategory(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    await this.incomeService.deleteCategory(id, userId);
   }
 
-  @Post('entry/edit')
-  async editEntry(@Body() data: EditIncomeEntryDto): Promise<IncomeEntry | ApiResponse> {
-    return await this.incomeService.editEntry(data);
+  @Post('entries')
+  async addEntry(
+    @CurrentOwnerId() userId: number,
+    @Body() data: AddIncomeEntryDto,
+  ): Promise<IncomeEntry> {
+    return await this.incomeService.addEntry(data, userId);
   }
 
-  @Get('entry/all/:userId/:incomeId')
+  @Patch('entries/:id')
+  async editEntry(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: EditIncomeEntryDto,
+  ): Promise<IncomeEntry> {
+    return await this.incomeService.editEntry(id, userId, data);
+  }
+
+  @Get('entries/category/:incomeId')
   async getAllEntries(
-    @Param('userId') userId: number,
-    @Param('incomeId') incomeId: number,
+    @CurrentOwnerId() userId: number,
+    @Param('incomeId', ParseIntPipe) incomeId: number,
   ): Promise<IncomeEntry[]> {
-    return await this.incomeService.getAllEntriesFromCategory(userId, incomeId);
+    return await this.incomeService.getAllEntriesFromCategory(incomeId, userId);
+  }
+
+  @Delete('entries/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteEntry(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    await this.incomeService.deleteEntry(id, userId);
   }
 }

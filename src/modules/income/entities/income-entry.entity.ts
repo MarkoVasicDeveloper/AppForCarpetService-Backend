@@ -1,18 +1,14 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('add_new_income', { schema: 'apiperionica' })
+@Entity('income_entries', { schema: 'apiperionica' })
 export class IncomeEntry {
-  @PrimaryGeneratedColumn({
-    type: 'int',
-    name: 'add_new_income_id',
-    unsigned: true,
-  })
-  incomeEntryId!: number;
+  @PrimaryGeneratedColumn({ type: 'int', name: 'income_entry_id', unsigned: true })
+  id!: number;
 
-  @Column('int', { name: 'income_id', unsigned: true, default: () => "'0'" })
+  @Column('int', { name: 'income_id', unsigned: true })
   incomeId!: number;
 
-  @Column('int', { name: 'value', default: () => "'0'" })
+  @Column('int', { name: 'value', unsigned: true })
   value!: number;
 
   @Column('timestamp', { name: 'date_at', default: () => 'CURRENT_TIMESTAMP' })
