@@ -1,17 +1,11 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Index('title', ['title'], { unique: true })
-@Entity('costs', { schema: 'apiperionica' })
+@Entity('cost_categories', { schema: 'apiperionica' })
 export class CostCategory {
   @PrimaryGeneratedColumn({ type: 'int', name: 'costs_id', unsigned: true })
-  costsId!: number;
+  id!: number;
 
-  @Column('varchar', {
-    name: 'title',
-    unique: true,
-    length: 50,
-    default: () => "'0'",
-  })
+  @Column('varchar', { name: 'title', unique: true, length: 50 })
   title!: string;
 
   @Column('int', { name: 'user_id', unsigned: true })

@@ -1,9 +1,5 @@
-export class EditCostEntryDto {
-  userId!: number;
-  suppliersId?: number;
-  product?: string;
-  quantity?: number;
-  price?: number;
-  paid?: boolean;
-  maturityData?: string;
-}
+import { PartialType } from '@nestjs/mapped-types';
+
+import { AddCostEntryDto } from './add-cost-entry.dto';
+
+export class EditCostEntryDto extends PartialType(AddCostEntryDto) {}

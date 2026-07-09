@@ -1,6 +1,20 @@
-import { Body, Controller, Get, Param, Post, SetMetadata, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { CurrentOwnerId } from 'src/shared/decorators/current-owner-id.decorator';
+import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Role } from 'src/shared/enums/role.enum';
 import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
-import { ApiResponse } from 'src/shared/response/api-response';
 
 import { CostService } from './cost.service';
 import { AddCostCategoryDto } from './dto/add-cost-category.dto';
@@ -10,63 +24,83 @@ import { EditCostEntryDto } from './dto/edit-cost-entry.dto';
 import { CostCategory } from './entities/cost-category.entity';
 import { CostEntry } from './entities/cost-entry.entity';
 
-@Controller('api/cost')
+@Controller('costs')
 @UseGuards(RoleCheckerGuard)
-@SetMetadata('allow_to_roles', ['user', 'administrator'])
+@Roles(Role.ADMINISTRATOR, Role.USER)
 export class CostController {
   constructor(private readonly costService: CostService) {}
 
-  @Post('category/add/:userId')
+  @Post('categories')
   async addCategory(
+    @CurrentOwnerId() userId: number,
     @Body() data: AddCostCategoryDto,
-    @Param('userId') userId: number,
-  ): Promise<CostCategory | ApiResponse> {
+  ): Promise<CostCategory> {
     return await this.costService.addCategory(data, userId);
   }
 
-  @Post('category/edit/:userId')
+  @Patch('categories/:id')
   async editCategory(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() data: EditCostCategoryDto,
-    @Param('userId') userId: number,
-  ): Promise<CostCategory | ApiResponse> {
-    return await this.costService.editCategory(data, userId);
+  ): Promise<CostCategory> {
+    return await this.costService.editCategory(id, userId, data);
   }
 
-  @Get('category/all/:userId')
-  async getAllCategories(@Param('userId') userId: number): Promise<CostCategory[]> {
+  @Get('categories')
+  async getAllCategories(@CurrentOwnerId() userId: number): Promise<CostCategory[]> {
     return await this.costService.getAllCategories(userId);
   }
 
-  @Post('entry/add/:userId')
+  @Post('entries')
   async addEntry(
+    @CurrentOwnerId() userId: number,
     @Body() data: AddCostEntryDto,
-    @Param('userId') userId: number,
-  ): Promise<CostEntry | ApiResponse> {
+  ): Promise<CostEntry> {
     return await this.costService.addEntry(data, userId);
   }
 
-  @Post('entry/edit/:costId')
+  @Patch('entries/:id')
   async editEntry(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() data: EditCostEntryDto,
-    @Param('costId') costId: number,
-  ): Promise<CostEntry | ApiResponse> {
-    return await this.costService.editEntry(data, costId);
+  ): Promise<CostEntry> {
+    return await this.costService.editEntry(id, userId, data);
   }
 
-  @Get('entry/all/:costsId/:userId')
+  @Get('entries/category/:costsId')
   async getAllEntries(
-    @Param('userId') userId: number,
-    @Param('costsId') costsId: number,
+    @CurrentOwnerId() userId: number,
+    @Param('costsId', ParseIntPipe) costsId: number,
   ): Promise<CostEntry[]> {
     return await this.costService.getAllEntries(costsId, userId);
   }
 
-  @Get('entry/all-by-supplier/:costsId/:supplierId/:userId')
+  @Get('entries/category/:costsId/supplier/:supplierId')
   async getAllEntriesBySupplier(
-    @Param('userId') userId: number,
-    @Param('costsId') costsId: number,
-    @Param('supplierId') supplierId: number,
+    @CurrentOwnerId() userId: number,
+    @Param('costsId', ParseIntPipe) costsId: number,
+    @Param('supplierId', ParseIntPipe) supplierId: number,
   ): Promise<CostEntry[]> {
-    return await this.costService.getAllEntriesBySupplier(costsId, userId, supplierId);
+    return await this.costService.getAllEntriesBySupplier(costsId, supplierId, userId);
+  }
+
+  @Delete('categories/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteCategory(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    await this.costService.deleteCategory(id, userId);
+  }
+
+  @Delete('entries/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteEntry(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    await this.costService.deleteEntry(id, userId);
   }
 }

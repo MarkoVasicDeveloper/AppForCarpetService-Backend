@@ -1,30 +1,30 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('cost', { schema: 'apiperionica' })
+@Entity('cost_entries', { schema: 'apiperionica' })
 export class CostEntry {
   @PrimaryGeneratedColumn({ type: 'int', name: 'cost_id', unsigned: true })
-  costId!: number;
+  id!: number;
 
-  @Column('int', { name: 'costs_id', unsigned: true, default: () => "'0'" })
+  @Column('int', { name: 'costs_id', unsigned: true })
   costsId!: number;
 
-  @Column('int', { name: 'suppliers_id', unsigned: true, default: () => "'0'" })
-  suppliersId!: number;
+  @Column('int', { name: 'suppliers_id', unsigned: true })
+  supplierId!: number;
 
-  @Column('varchar', { name: 'product', length: 255, default: () => "'0'" })
+  @Column('varchar', { name: 'product', length: 255 })
   product!: string;
 
-  @Column('int', { name: 'quantity', default: () => "'0'" })
+  @Column('int', { name: 'quantity', unsigned: true })
   quantity!: number;
 
-  @Column('int', { name: 'price', default: () => "'0'" })
+  @Column('int', { name: 'price', unsigned: true })
   price!: number;
 
-  @Column('tinyint', { name: 'paid', width: 1, default: () => "'0'" })
+  @Column('boolean', { name: 'paid', default: false })
   paid!: boolean;
 
-  @Column('varchar', { name: 'maturity_data', nullable: true, length: 50 })
-  maturityData!: string | null;
+  @Column('date', { name: 'maturity_date', nullable: true })
+  maturityDate!: Date | null;
 
   @Column('int', { name: 'user_id', unsigned: true })
   userId!: number;

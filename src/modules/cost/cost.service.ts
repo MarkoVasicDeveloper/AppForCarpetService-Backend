@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ApiResponse } from 'src/shared/response/api-response';
 import { Repository } from 'typeorm';
 
 import { AddCostCategoryDto } from './dto/add-cost-category.dto';
@@ -14,92 +13,93 @@ import { CostEntry } from './entities/cost-entry.entity';
 export class CostService {
   constructor(
     @InjectRepository(CostCategory)
-    private readonly categoryRepo: Repository<CostCategory>,
+    private readonly categoryRepository: Repository<CostCategory>,
 
     @InjectRepository(CostEntry)
-    private readonly entryRepo: Repository<CostEntry>,
+    private readonly entryRepository: Repository<CostEntry>,
   ) {}
 
-  async addCategory(data: AddCostCategoryDto, userId: number): Promise<CostCategory | ApiResponse> {
-    const exists = await this.categoryRepo.findOne({
-      where: { title: data.title },
+  async addCategory(data: AddCostCategoryDto, userId: number): Promise<CostCategory> {
+    const exists = await this.categoryRepository.findOne({
+      where: { title: data.title, userId },
     });
 
-    if (exists) return new ApiResponse(false, -4001, 'Category exists');
+    if (exists) {
+      throw new ConflictException('Cost category with this title already exists.');
+    }
 
-    const newCategory = new CostCategory();
-    newCategory.title = data.title;
-    newCategory.userId = userId;
-
-    return await this.categoryRepo.save(newCategory);
+    const newCategory = this.categoryRepository.create({ ...data, userId });
+    return await this.categoryRepository.save(newCategory);
   }
 
-  async editCategory(
-    data: EditCostCategoryDto,
-    userId: number,
-  ): Promise<CostCategory | ApiResponse> {
-    const category = await this.categoryRepo.findOne({
-      where: { title: data.title, userId: userId },
+  async editCategory(id: number, userId: number, data: EditCostCategoryDto): Promise<CostCategory> {
+    const category = await this.categoryRepository.findOne({
+      where: { id, userId },
     });
 
-    if (!category) return new ApiResponse(false, -4002, 'Category not found.');
+    if (!category) {
+      throw new NotFoundException('Cost category not found.');
+    }
 
-    category.title = data.editTitle;
-    return await this.categoryRepo.save(category);
+    this.categoryRepository.merge(category, data);
+    return await this.categoryRepository.save(category);
   }
 
   async getAllCategories(userId: number): Promise<CostCategory[]> {
-    return await this.categoryRepo.find({
-      where: { userId: userId },
-    });
+    return await this.categoryRepository.find({ where: { userId } });
   }
 
-  async addEntry(data: AddCostEntryDto, userId: number): Promise<CostEntry | ApiResponse> {
-    const newCost = new CostEntry();
-    newCost.costsId = data.costsId;
-    newCost.suppliersId = data.suppliersId;
-    newCost.userId = userId;
-    newCost.quantity = data.quantity;
-    newCost.product = data.product;
-    newCost.price = data.price;
-    newCost.paid = data.paid;
-    if (data.maturityData) newCost.maturityData = data.maturityData;
-
-    return await this.entryRepo.save(newCost);
+  async addEntry(data: AddCostEntryDto, userId: number): Promise<CostEntry> {
+    const newEntry = this.entryRepository.create({ ...data, userId });
+    return await this.entryRepository.save(newEntry);
   }
 
-  async editEntry(data: EditCostEntryDto, costId: number): Promise<CostEntry | ApiResponse> {
-    const cost = await this.entryRepo.findOne({
-      where: {
-        costId: costId,
-        userId: data.userId,
-      },
+  async editEntry(id: number, userId: number, data: EditCostEntryDto): Promise<CostEntry> {
+    const entry = await this.entryRepository.findOne({
+      where: { id, userId },
     });
-    if (!cost) return new ApiResponse(false, -4003, 'No such cost found');
 
-    if (data.maturityData !== undefined) cost.maturityData = data.maturityData;
-    if (data.paid !== undefined) cost.paid = data.paid;
-    if (data.price !== undefined) cost.price = data.price;
-    if (data.quantity !== undefined) cost.quantity = data.quantity;
-    if (data.product !== undefined) cost.product = data.product;
-    if (data.suppliersId !== undefined) cost.suppliersId = data.suppliersId;
+    if (!entry) {
+      throw new NotFoundException('Cost entry not found.');
+    }
 
-    return await this.entryRepo.save(cost);
+    this.entryRepository.merge(entry, data);
+    return await this.entryRepository.save(entry);
   }
 
   async getAllEntries(costsId: number, userId: number): Promise<CostEntry[]> {
-    return await this.entryRepo.find({
-      where: { userId: userId, costsId: costsId },
+    return await this.entryRepository.find({
+      where: { costsId, userId },
     });
   }
 
   async getAllEntriesBySupplier(
     costsId: number,
-    userId: number,
     supplierId: number,
+    userId: number,
   ): Promise<CostEntry[]> {
-    return await this.entryRepo.find({
-      where: { userId: userId, costsId: costsId, suppliersId: supplierId },
+    return await this.entryRepository.find({
+      where: { costsId, supplierId, userId },
     });
+  }
+
+  async deleteCategory(id: number, userId: number): Promise<void> {
+    const result = await this.categoryRepository.delete({ id, userId });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(
+        'Cost category not found or you do not have permission to delete it.',
+      );
+    }
+  }
+
+  async deleteEntry(id: number, userId: number): Promise<void> {
+    const result = await this.entryRepository.delete({ id, userId });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(
+        'Cost entry not found or you do not have permission to delete it.',
+      );
+    }
   }
 }
