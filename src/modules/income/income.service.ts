@@ -32,25 +32,32 @@ export class IncomeService {
     return await this.categoryRepository.save(category);
   }
 
+  async getAllCategories(userId: number): Promise<IncomeCategory[]> {
+    return await this.categoryRepository.find({ where: { userId } });
+  }
+
+  async getCategoryById(id: number, userId: number): Promise<IncomeCategory> {
+    const category = await this.categoryRepository.findOne({
+      where: { id, userId },
+      relations: ['entries'],
+    });
+
+    if (!category) {
+      throw new NotFoundException('Income category not found or access denied.');
+    }
+
+    return category;
+  }
+
   async editCategory(
     id: number,
     userId: number,
     data: EditIncomeCategoryDto,
   ): Promise<IncomeCategory> {
-    const category = await this.categoryRepository.findOne({
-      where: { id, userId },
-    });
-
-    if (!category) {
-      throw new NotFoundException('Income category not found.');
-    }
+    const category = await this.getCategoryById(id, userId);
 
     this.categoryRepository.merge(category, data);
     return await this.categoryRepository.save(category);
-  }
-
-  async getAllCategories(userId: number): Promise<IncomeCategory[]> {
-    return await this.categoryRepository.find({ where: { userId } });
   }
 
   async deleteCategory(id: number, userId: number): Promise<void> {
@@ -61,28 +68,69 @@ export class IncomeService {
   }
 
   async addEntry(data: AddIncomeEntryDto, userId: number): Promise<IncomeEntry> {
+    const categoryExists = await this.categoryRepository.findOne({
+      where: { id: data.categoryId, userId },
+    });
+
+    if (!categoryExists) {
+      throw new NotFoundException('Target income category not found or access denied.');
+    }
+
     const entry = this.entryRepository.create({ ...data, userId });
     return await this.entryRepository.save(entry);
   }
 
-  async editEntry(id: number, userId: number, data: EditIncomeEntryDto): Promise<IncomeEntry> {
+  async getAllEntriesFromCategory(categoryId: number, userId: number): Promise<IncomeEntry[]> {
+    const entries = await this.entryRepository.find({
+      where: {
+        categoryId,
+        userId,
+        category: { userId },
+      },
+      relations: ['category'],
+      order: { dateAt: 'DESC' },
+    });
+
+    if (entries.length === 0) {
+      const categoryExists = await this.categoryRepository.findOne({
+        where: { id: categoryId, userId },
+      });
+      if (!categoryExists) {
+        throw new NotFoundException('Income category not found or access denied.');
+      }
+    }
+
+    return entries;
+  }
+
+  async getEntryById(id: number, userId: number): Promise<IncomeEntry> {
     const entry = await this.entryRepository.findOne({
       where: { id, userId },
+      relations: ['category'],
     });
 
     if (!entry) {
-      throw new NotFoundException('Income entry not found.');
+      throw new NotFoundException('Income entry not found or access denied.');
+    }
+
+    return entry;
+  }
+
+  async editEntry(id: number, userId: number, data: EditIncomeEntryDto): Promise<IncomeEntry> {
+    const entry = await this.getEntryById(id, userId);
+
+    if (data.categoryId) {
+      const categoryExists = await this.categoryRepository.findOne({
+        where: { id: data.categoryId, userId },
+      });
+
+      if (!categoryExists) {
+        throw new NotFoundException('Target income category not found or access denied.');
+      }
     }
 
     this.entryRepository.merge(entry, data);
     return await this.entryRepository.save(entry);
-  }
-
-  async getAllEntriesFromCategory(incomeId: number, userId: number): Promise<IncomeEntry[]> {
-    return await this.entryRepository.find({
-      where: { incomeId, userId },
-      order: { dateAt: 'DESC' },
-    });
   }
 
   async deleteEntry(id: number, userId: number): Promise<void> {

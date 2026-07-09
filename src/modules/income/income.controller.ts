@@ -38,6 +38,19 @@ export class IncomeController {
     return await this.incomeService.addCategory(data, userId);
   }
 
+  @Get('categories')
+  async getAllCategories(@CurrentOwnerId() userId: number): Promise<IncomeCategory[]> {
+    return await this.incomeService.getAllCategories(userId);
+  }
+
+  @Get('categories/:id')
+  async getCategory(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<IncomeCategory> {
+    return await this.incomeService.getCategoryById(id, userId);
+  }
+
   @Patch('categories/:id')
   async editCategory(
     @CurrentOwnerId() userId: number,
@@ -45,11 +58,6 @@ export class IncomeController {
     @Body() data: EditIncomeCategoryDto,
   ): Promise<IncomeCategory> {
     return await this.incomeService.editCategory(id, userId, data);
-  }
-
-  @Get('categories')
-  async getAllCategories(@CurrentOwnerId() userId: number): Promise<IncomeCategory[]> {
-    return await this.incomeService.getAllCategories(userId);
   }
 
   @Delete('categories/:id')
@@ -69,6 +77,22 @@ export class IncomeController {
     return await this.incomeService.addEntry(data, userId);
   }
 
+  @Get('categories/:categoryId/entries')
+  async getAllEntries(
+    @CurrentOwnerId() userId: number,
+    @Param('categoryId', ParseIntPipe) categoryId: number,
+  ): Promise<IncomeEntry[]> {
+    return await this.incomeService.getAllEntriesFromCategory(categoryId, userId);
+  }
+
+  @Get('entries/:id')
+  async getEntry(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<IncomeEntry> {
+    return await this.incomeService.getEntryById(id, userId);
+  }
+
   @Patch('entries/:id')
   async editEntry(
     @CurrentOwnerId() userId: number,
@@ -76,14 +100,6 @@ export class IncomeController {
     @Body() data: EditIncomeEntryDto,
   ): Promise<IncomeEntry> {
     return await this.incomeService.editEntry(id, userId, data);
-  }
-
-  @Get('entries/category/:incomeId')
-  async getAllEntries(
-    @CurrentOwnerId() userId: number,
-    @Param('incomeId', ParseIntPipe) incomeId: number,
-  ): Promise<IncomeEntry[]> {
-    return await this.incomeService.getAllEntriesFromCategory(incomeId, userId);
   }
 
   @Delete('entries/:id')
