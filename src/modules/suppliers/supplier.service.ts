@@ -15,16 +15,13 @@ export class SupplierService {
   async addSupplier(data: AddSupplierDto, userId: number): Promise<Supplier> {
     const existingSupplier = await this.supplierRepository.findOne({
       where: {
-        userId: userId,
-        costsId: data.costsId,
+        userId,
         name: data.name,
       },
     });
 
     if (existingSupplier) {
-      throw new ConflictException(
-        'Supplier with this name already exists for the specified cost category.',
-      );
+      throw new ConflictException('Supplier with this name already exists.');
     }
 
     const newSupplier = this.supplierRepository.create({
@@ -35,29 +32,46 @@ export class SupplierService {
     return await this.supplierRepository.save(newSupplier);
   }
 
-  async editSupplier(supplierId: number, userId: number, data: EditSupplierDto): Promise<Supplier> {
+  async getAllSuppliers(userId: number): Promise<Supplier[]> {
+    return await this.supplierRepository.find({
+      where: { userId },
+      order: { name: 'ASC' },
+    });
+  }
+
+  async getSupplierById(id: number, userId: number): Promise<Supplier> {
     const supplier = await this.supplierRepository.findOne({
-      where: {
-        id: supplierId,
-        userId: userId,
-      },
+      where: { id, userId },
+      relations: ['costs'],
     });
 
     if (!supplier) {
-      throw new NotFoundException('Supplier not found.');
+      throw new NotFoundException('Supplier not found or access denied.');
+    }
+
+    return supplier;
+  }
+
+  async editSupplier(id: number, userId: number, data: EditSupplierDto): Promise<Supplier> {
+    const supplier = await this.getSupplierById(id, userId);
+
+    if (data.name && data.name !== supplier.name) {
+      const nameExists = await this.supplierRepository.findOne({
+        where: { name: data.name, userId },
+      });
+      if (nameExists) {
+        throw new ConflictException('Supplier with this new name already exists.');
+      }
     }
 
     this.supplierRepository.merge(supplier, data);
-
     return await this.supplierRepository.save(supplier);
   }
 
-  async getAllSuppliers(userId: number, costsId: number): Promise<Supplier[]> {
-    return await this.supplierRepository.find({
-      where: {
-        userId: userId,
-        costsId: costsId,
-      },
-    });
+  async deleteSupplier(id: number, userId: number): Promise<void> {
+    const result = await this.supplierRepository.delete({ id, userId });
+    if (result.affected === 0) {
+      throw new NotFoundException('Supplier not found or access denied.');
+    }
   }
 }

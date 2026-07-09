@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+
+import { CostEntry } from '../cost/entities/cost-entry.entity';
 
 @Entity('suppliers', { schema: 'apiperionica' })
 export class Supplier {
@@ -17,9 +19,9 @@ export class Supplier {
   @Column('varchar', { name: 'bank_account', nullable: true, length: 50 })
   bankAccount!: string | null;
 
-  @Column('int', { name: 'costs_id', unsigned: true })
-  costsId!: number;
-
   @Column('int', { name: 'user_id', unsigned: true })
   userId!: number;
+
+  @OneToMany(() => CostEntry, (cost) => cost.supplier)
+  costs!: CostEntry[];
 }

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, IsInt, Length } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 
 export class AddSupplierDto {
   @IsString()
@@ -18,8 +18,4 @@ export class AddSupplierDto {
   @IsOptional()
   @IsNotEmpty({ message: 'Bank account number cannot be an empty string.' })
   bankAccount?: string;
-
-  @IsInt()
-  @IsNotEmpty({ message: 'Costs ID (costsId) is required.' })
-  costsId!: number;
 }

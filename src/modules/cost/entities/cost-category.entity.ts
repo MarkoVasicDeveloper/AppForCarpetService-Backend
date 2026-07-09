@@ -1,8 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+
+import { CostEntry } from './cost-entry.entity';
 
 @Entity('cost_categories', { schema: 'apiperionica' })
 export class CostCategory {
-  @PrimaryGeneratedColumn({ type: 'int', name: 'costs_id', unsigned: true })
+  @PrimaryGeneratedColumn({ type: 'int', name: 'category_id', unsigned: true })
   id!: number;
 
   @Column('varchar', { name: 'title', unique: true, length: 50 })
@@ -10,4 +12,7 @@ export class CostCategory {
 
   @Column('int', { name: 'user_id', unsigned: true })
   userId!: number;
+
+  @OneToMany(() => CostEntry, (entry) => entry.category)
+  entries!: CostEntry[];
 }

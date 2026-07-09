@@ -38,6 +38,19 @@ export class CostController {
     return await this.costService.addCategory(data, userId);
   }
 
+  @Get('categories')
+  async getAllCategories(@CurrentOwnerId() userId: number): Promise<CostCategory[]> {
+    return await this.costService.getAllCategories(userId);
+  }
+
+  @Get('categories/:id')
+  async getCategory(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<CostCategory> {
+    return await this.costService.getCategoryById(id, userId);
+  }
+
   @Patch('categories/:id')
   async editCategory(
     @CurrentOwnerId() userId: number,
@@ -47,9 +60,13 @@ export class CostController {
     return await this.costService.editCategory(id, userId, data);
   }
 
-  @Get('categories')
-  async getAllCategories(@CurrentOwnerId() userId: number): Promise<CostCategory[]> {
-    return await this.costService.getAllCategories(userId);
+  @Delete('categories/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteCategory(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    await this.costService.deleteCategory(id, userId);
   }
 
   @Post('entries')
@@ -60,6 +77,30 @@ export class CostController {
     return await this.costService.addEntry(data, userId);
   }
 
+  @Get('categories/:categoryId/entries')
+  async getAllEntries(
+    @CurrentOwnerId() userId: number,
+    @Param('categoryId', ParseIntPipe) categoryId: number,
+  ): Promise<CostEntry[]> {
+    return await this.costService.getAllEntriesFromCategory(categoryId, userId);
+  }
+
+  @Get('suppliers/:supplierId/entries')
+  async getAllEntriesBySupplier(
+    @CurrentOwnerId() userId: number,
+    @Param('supplierId', ParseIntPipe) supplierId: number,
+  ): Promise<CostEntry[]> {
+    return await this.costService.getAllEntriesFromSupplier(supplierId, userId);
+  }
+
+  @Get('entries/:id')
+  async getEntry(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<CostEntry> {
+    return await this.costService.getEntryById(id, userId);
+  }
+
   @Patch('entries/:id')
   async editEntry(
     @CurrentOwnerId() userId: number,
@@ -67,32 +108,6 @@ export class CostController {
     @Body() data: EditCostEntryDto,
   ): Promise<CostEntry> {
     return await this.costService.editEntry(id, userId, data);
-  }
-
-  @Get('entries/category/:costsId')
-  async getAllEntries(
-    @CurrentOwnerId() userId: number,
-    @Param('costsId', ParseIntPipe) costsId: number,
-  ): Promise<CostEntry[]> {
-    return await this.costService.getAllEntries(costsId, userId);
-  }
-
-  @Get('entries/category/:costsId/supplier/:supplierId')
-  async getAllEntriesBySupplier(
-    @CurrentOwnerId() userId: number,
-    @Param('costsId', ParseIntPipe) costsId: number,
-    @Param('supplierId', ParseIntPipe) supplierId: number,
-  ): Promise<CostEntry[]> {
-    return await this.costService.getAllEntriesBySupplier(costsId, supplierId, userId);
-  }
-
-  @Delete('categories/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteCategory(
-    @CurrentOwnerId() userId: number,
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<void> {
-    await this.costService.deleteCategory(id, userId);
   }
 
   @Delete('entries/:id')

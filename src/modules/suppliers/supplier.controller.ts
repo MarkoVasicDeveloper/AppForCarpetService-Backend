@@ -1,4 +1,16 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AddSupplierDto } from 'src/modules/suppliers/dto/add-supplier.dto';
 import { EditSupplierDto } from 'src/modules/suppliers/dto/edit-supplier.dto';
 import { Supplier } from 'src/modules/suppliers/supplier.entity';
@@ -22,20 +34,34 @@ export class SupplierController {
     return await this.supplierService.addSupplier(data, userId);
   }
 
-  @Patch(':supplierId')
-  async editSupplier(
-    @CurrentOwnerId() userId: number,
-    @Param('supplierId', ParseIntPipe) supplierId: number,
-    @Body() data: EditSupplierDto,
-  ): Promise<Supplier> {
-    return await this.supplierService.editSupplier(supplierId, userId, data);
+  @Get()
+  async getAllSuppliers(@CurrentOwnerId() userId: number): Promise<Supplier[]> {
+    return await this.supplierService.getAllSuppliers(userId);
   }
 
-  @Get('costs/:costsId')
-  async getAllSuppliersByCost(
+  @Get(':id')
+  async getSupplier(
     @CurrentOwnerId() userId: number,
-    @Param('costsId', ParseIntPipe) costsId: number,
-  ): Promise<Supplier[]> {
-    return await this.supplierService.getAllSuppliers(userId, costsId);
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<Supplier> {
+    return await this.supplierService.getSupplierById(id, userId);
+  }
+
+  @Patch(':id')
+  async editSupplier(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: EditSupplierDto,
+  ): Promise<Supplier> {
+    return await this.supplierService.editSupplier(id, userId, data);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteSupplier(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    await this.supplierService.deleteSupplier(id, userId);
   }
 }

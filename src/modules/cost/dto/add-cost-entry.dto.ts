@@ -11,8 +11,8 @@ import {
 
 export class AddCostEntryDto {
   @IsInt()
-  @IsNotEmpty({ message: 'Category ID (costsId) is required.' })
-  costsId!: number;
+  @IsNotEmpty({ message: 'Category ID (categoryId) is required.' })
+  categoryId!: number;
 
   @IsInt()
   @IsNotEmpty({ message: 'Supplier ID (supplierId) is required.' })

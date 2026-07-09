@@ -1,12 +1,16 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+
+import { Supplier } from '../../suppliers/supplier.entity';
+
+import { CostCategory } from './cost-category.entity';
 
 @Entity('cost_entries', { schema: 'apiperionica' })
 export class CostEntry {
   @PrimaryGeneratedColumn({ type: 'int', name: 'cost_id', unsigned: true })
   id!: number;
 
-  @Column('int', { name: 'costs_id', unsigned: true })
-  costsId!: number;
+  @Column('int', { name: 'category_id', unsigned: true })
+  categoryId!: number;
 
   @Column('int', { name: 'suppliers_id', unsigned: true })
   supplierId!: number;
@@ -28,4 +32,12 @@ export class CostEntry {
 
   @Column('int', { name: 'user_id', unsigned: true })
   userId!: number;
+
+  @ManyToOne(() => CostCategory, (category) => category.entries, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'category_id' })
+  category!: CostCategory;
+
+  @ManyToOne(() => Supplier, (supplier) => supplier.costs, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'suppliers_id' })
+  supplier!: Supplier;
 }
