@@ -12,7 +12,7 @@ import { IncomeModule } from 'src/modules/income/income.module';
 import { MailerModule } from 'src/modules/mailer/mailer.module';
 import { SchedulingCarpetModule } from 'src/modules/scheduling-carpet/scheduling-carpet.module';
 import { SubscribersModule } from 'src/modules/subscribers/subscribers.module';
-import { SuppliersModule } from 'src/modules/suppliers/suppliers.module';
+import { SupplierModule } from 'src/modules/suppliers/supplier.module';
 import { UserModule } from 'src/modules/user/user.module';
 import { WorkerModule } from 'src/modules/worker/worker.module';
 
@@ -39,7 +39,7 @@ import { WorkerModule } from 'src/modules/worker/worker.module';
     WorkerModule,
     UserModule,
     AdministratorModule,
-    SuppliersModule,
+    SupplierModule,
     SchedulingCarpetModule,
     SubscribersModule,
     CostModule,

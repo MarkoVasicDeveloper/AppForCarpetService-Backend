@@ -1,18 +1,11 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Index('name', ['name'], { unique: true })
-@Index('pib', ['pib'], { unique: true })
 @Entity('suppliers', { schema: 'apiperionica' })
-export class Suppliers {
+export class Supplier {
   @PrimaryGeneratedColumn({ type: 'int', name: 'suppliers_id', unsigned: true })
-  suppliersId!: number;
+  id!: number;
 
-  @Column('varchar', {
-    name: 'name',
-    unique: true,
-    length: 50,
-    default: () => "'0'",
-  })
+  @Column('varchar', { name: 'name', unique: true, length: 50 })
   name!: string;
 
   @Column('varchar', { name: 'address', nullable: true, length: 50 })
@@ -21,8 +14,8 @@ export class Suppliers {
   @Column('varchar', { name: 'pib', nullable: true, unique: true, length: 50 })
   pib!: string | null;
 
-  @Column('int', { name: 'bank_account', nullable: true })
-  bankAccount!: number | null;
+  @Column('varchar', { name: 'bank_account', nullable: true, length: 50 })
+  bankAccount!: string | null;
 
   @Column('int', { name: 'costs_id', unsigned: true })
   costsId!: number;
