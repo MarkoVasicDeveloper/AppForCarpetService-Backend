@@ -1,39 +1,60 @@
-import { Body, Controller, Get, Param, Post, SetMetadata, UseGuards } from '@nestjs/common';
-import { EditSchedulingCarpetDto } from 'src/modules/scheduling-carpet/dto/edit-scheduling-carpet.dto';
-import { SchedulingCarpetDto } from 'src/modules/scheduling-carpet/dto/scheduling-carpet.dto';
-import { SchedulingCarpet } from 'src/modules/scheduling-carpet/scheduling-carpet.entity';
-import SchadulingCarpetService from 'src/modules/scheduling-carpet/scheduling-carpet.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { CurrentOwnerId } from 'src/shared/decorators/current-owner-id.decorator';
+import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Role } from 'src/shared/enums/role.enum';
 import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
-import { ApiResponse } from 'src/shared/response/api-response';
 
-@Controller('api/schedulingCarpet')
-export default class SchedulingCarpetController {
-  constructor(private readonly schedulingCarpetService: SchadulingCarpetService) {}
+import { AddSchedulingCarpetDto } from './dto/add-scheduling-carpet.dto';
+import { EditSchedulingCarpetDto } from './dto/edit-scheduling-carpet.dto';
+import { SchedulingCarpet } from './scheduling-carpet.entity';
+import { SchedulingCarpetService } from './scheduling-carpet.service';
 
-  @Post('add/:id')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
+@Controller('scheduling-carpets')
+@UseGuards(RoleCheckerGuard)
+@Roles(Role.USER, Role.ADMINISTRATOR, Role.WORKER)
+export class SchedulingCarpetController {
+  constructor(private readonly schedulingCarpetService: SchedulingCarpetService) {}
+
+  @Post()
   async addSchedulingCarpet(
-    @Body() data: SchedulingCarpetDto,
-    @Param('id') userId: number,
+    @CurrentOwnerId() userId: number,
+    @Body() data: AddSchedulingCarpetDto,
   ): Promise<SchedulingCarpet> {
     return await this.schedulingCarpetService.addSchedulingCarpet(data, userId);
   }
 
-  @Post('edit/:id')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
+  @Patch(':id')
   async editSchedulingCarpet(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() data: EditSchedulingCarpetDto,
-    @Param('id') userId: number,
-  ): Promise<SchedulingCarpet | ApiResponse> {
-    return await this.schedulingCarpetService.editSchedulingCarpet(data, userId);
+  ): Promise<SchedulingCarpet> {
+    return await this.schedulingCarpetService.editSchedulingCarpet(id, userId, data);
   }
 
-  @Get('getAll/:id')
-  @UseGuards(RoleCheckerGuard)
-  @SetMetadata('allow_to_roles', ['user'])
-  async getAll(@Param('id') userId: number): Promise<SchedulingCarpet[]> {
+  @Get()
+  async getAll(@CurrentOwnerId() userId: number): Promise<SchedulingCarpet[]> {
     return await this.schedulingCarpetService.getAllScheduling(userId);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteScheduling(
+    @CurrentOwnerId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    await this.schedulingCarpetService.deleteScheduling(id, userId);
   }
 }

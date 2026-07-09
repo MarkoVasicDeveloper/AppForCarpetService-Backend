@@ -1,69 +1,57 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EditSchedulingCarpetDto } from 'src/modules/scheduling-carpet/dto/edit-scheduling-carpet.dto';
-import { SchedulingCarpetDto } from 'src/modules/scheduling-carpet/dto/scheduling-carpet.dto';
-import { SchedulingCarpet } from 'src/modules/scheduling-carpet/scheduling-carpet.entity';
-import { ApiResponse } from 'src/shared/response/api-response';
 import { Repository } from 'typeorm';
 
+import { AddSchedulingCarpetDto } from './dto/add-scheduling-carpet.dto';
+import { EditSchedulingCarpetDto } from './dto/edit-scheduling-carpet.dto';
+import { SchedulingCarpet } from './scheduling-carpet.entity';
+
 @Injectable()
-export default class SchedulingCarpetService {
+export class SchedulingCarpetService {
   constructor(
     @InjectRepository(SchedulingCarpet)
-    private readonly schedulingCarpetService: Repository<SchedulingCarpet>,
+    private readonly carpetRepository: Repository<SchedulingCarpet>,
   ) {}
 
-  async addSchedulingCarpet(data: SchedulingCarpetDto, userId: number): Promise<SchedulingCarpet> {
-    const schedulingCarpet = new SchedulingCarpet();
-    schedulingCarpet.name = data.name;
-    schedulingCarpet.surname = data.surname;
-    schedulingCarpet.address = data.address;
-    schedulingCarpet.phone = data.phone;
-    schedulingCarpet.userId = userId;
-
-    if (data.email) {
-      schedulingCarpet.email = data.email;
-    }
-
-    if (data.note) {
-      schedulingCarpet.note = data.note;
-    }
-
-    const savedSchedulingCarpet = await this.schedulingCarpetService.save(schedulingCarpet);
-
-    return savedSchedulingCarpet;
+  async addSchedulingCarpet(
+    data: AddSchedulingCarpetDto,
+    userId: number,
+  ): Promise<SchedulingCarpet> {
+    const schedulingCarpet = this.carpetRepository.create({ ...data, userId });
+    return await this.carpetRepository.save(schedulingCarpet);
   }
 
   async editSchedulingCarpet(
-    data: EditSchedulingCarpetDto,
+    id: number,
     userId: number,
-  ): Promise<SchedulingCarpet | ApiResponse> {
-    const schedulingCarpet = await this.schedulingCarpetService.findOne({
-      where: {
-        schedulingCarpetId: data.scheduling_carpet_id,
-        userId: userId,
-      },
+    data: EditSchedulingCarpetDto,
+  ): Promise<SchedulingCarpet> {
+    const schedulingCarpet = await this.carpetRepository.findOne({
+      where: { id, userId },
     });
 
     if (!schedulingCarpet) {
-      return new ApiResponse(false, -12001, 'Not found');
+      throw new NotFoundException('Scheduling record not found.');
     }
 
-    schedulingCarpet.isScheduling = true;
-
-    const savedShedulingCarpet = await this.schedulingCarpetService.save(schedulingCarpet);
-
-    return savedShedulingCarpet;
+    this.carpetRepository.merge(schedulingCarpet, data);
+    return await this.carpetRepository.save(schedulingCarpet);
   }
 
   async getAllScheduling(userId: number): Promise<SchedulingCarpet[]> {
-    const all = await this.schedulingCarpetService.find({
+    return await this.carpetRepository.find({
       where: {
+        userId,
         isScheduling: false,
-        userId: userId,
       },
+      order: { timeAt: 'DESC' },
     });
+  }
 
-    return all;
+  async deleteScheduling(id: number, userId: number): Promise<void> {
+    const result = await this.carpetRepository.delete({ id, userId });
+    if (result.affected === 0) {
+      throw new NotFoundException('Scheduling record not found or access denied.');
+    }
   }
 }
