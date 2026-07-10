@@ -1,24 +1,15 @@
-import {
-  BadRequestException,
-  NotFoundException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { ConflictException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
 import { Repository, QueryFailedError, ObjectLiteral } from 'typeorm';
 
+import { CryptoUtil } from '../../shared/utils/crypto.util';
 import { UserMailerService } from '../mailer/mailer.service';
 
 import { AddUserDto } from './dto/add-user.dto';
 import { EditUserDto } from './dto/edit-user.dto';
 import { User } from './user.entity';
 import { UserService } from './user.service';
-
-jest.mock('bcrypt', () => ({
-  genSalt: jest.fn(),
-  hash: jest.fn(),
-}));
 
 type MockRepository<T extends ObjectLiteral> = {
   [P in keyof Repository<T>]?: jest.Mock;
@@ -35,6 +26,7 @@ describe('UserService', () => {
 
   beforeEach(async () => {
     const mockRepositoryFactory = (): MockRepository<object> => ({
+      create: jest.fn().mockImplementation((dto) => ({ ...dto })),
       save: jest.fn(),
       delete: jest.fn(),
       find: jest.fn(),
@@ -80,9 +72,7 @@ describe('UserService', () => {
     };
 
     it('should successfully create a user, hash password and trigger welcome email', async () => {
-      (bcrypt.genSalt as jest.Mock).mockResolvedValue('mocked_salt');
-      (bcrypt.hash as jest.Mock).mockResolvedValue('mocked_hashed_password');
-
+      jest.spyOn(CryptoUtil, 'hashPassword').mockResolvedValue('mocked_hashed_password');
       userRepository.save!.mockResolvedValue({
         userId: 1,
         ...dto,
@@ -92,32 +82,26 @@ describe('UserService', () => {
 
       const result = await service.addUser(dto);
 
-      expect(bcrypt.genSalt).toHaveBeenCalledWith(10);
-      expect(bcrypt.hash).toHaveBeenCalledWith(dto.password, 'mocked_salt');
+      expect(CryptoUtil.hashPassword).toHaveBeenCalledWith(dto.password);
+      expect(userRepository.create).toHaveBeenCalled();
       expect(userRepository.save).toHaveBeenCalled();
       expect(mailerService.sendWelcomeEmail).toHaveBeenCalledWith(dto.email);
       expect(result.userId).toBe(1);
       expect(result.passwordHash).toBe('mocked_hashed_password');
     });
 
-    it('should throw BadRequestException if database returns a duplicate entry error code', async () => {
-      (bcrypt.genSalt as jest.Mock).mockResolvedValue('mocked_salt');
-      (bcrypt.hash as jest.Mock).mockResolvedValue('mocked_hashed_password');
-
-      const driverError = { code: 'ER_DUP_ENTRY' };
+    it('should throw ConflictException if database returns a duplicate entry error code', async () => {
+      jest.spyOn(CryptoUtil, 'hashPassword').mockResolvedValue('mocked_hashed_password');
 
       const queryFailedError = new QueryFailedError('query', [], new Error());
-
-      Object.assign(queryFailedError, { driverError });
-
+      Object.assign(queryFailedError, { driverError: { code: 'ER_DUP_ENTRY' } });
       userRepository.save!.mockRejectedValue(queryFailedError);
 
-      await expect(service.addUser(dto)).rejects.toThrow(BadRequestException);
+      await expect(service.addUser(dto)).rejects.toThrow(ConflictException);
     });
 
     it('should throw InternalServerErrorException for generic database failures', async () => {
-      (bcrypt.genSalt as jest.Mock).mockResolvedValue('mocked_salt');
-      (bcrypt.hash as jest.Mock).mockResolvedValue('mocked_hashed_password');
+      jest.spyOn(CryptoUtil, 'hashPassword').mockResolvedValue('mocked_hashed_password');
       userRepository.save!.mockRejectedValue(new Error('Connection failure'));
 
       await expect(service.addUser(dto)).rejects.toThrow(InternalServerErrorException);

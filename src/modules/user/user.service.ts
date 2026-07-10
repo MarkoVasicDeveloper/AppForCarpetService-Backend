@@ -1,14 +1,14 @@
 import {
   Injectable,
-  BadRequestException,
   NotFoundException,
   InternalServerErrorException,
   Logger,
   Inject,
   forwardRef,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
+import { CryptoUtil } from 'src/shared/utils/crypto.util';
 import { Repository, QueryFailedError } from 'typeorm';
 
 import { UserMailerService } from '../mailer/mailer.service';
@@ -29,17 +29,17 @@ export class UserService {
   ) {}
 
   async addUser(data: AddUserDto): Promise<User> {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(data.password, salt);
+    const hashedPassword = await CryptoUtil.hashPassword(data.password);
 
-    const user = new User();
-    user.name = data.name;
-    user.surname = data.surname;
-    user.email = data.email;
-    user.city = data.city;
-    user.address = data.address;
-    user.phone = data.phone;
-    user.passwordHash = hashedPassword;
+    const user = this.userRepository.create({
+      name: data.name,
+      surname: data.surname,
+      email: data.email,
+      city: data.city,
+      address: data.address,
+      phone: data.phone,
+      passwordHash: hashedPassword,
+    });
 
     try {
       const savedUser = await this.userRepository.save(user);
@@ -51,10 +51,12 @@ export class UserService {
       if (error instanceof QueryFailedError) {
         const dbError = error.driverError as { errno?: number; code?: string };
         if (dbError.errno === 1062 || dbError.code === 'ER_DUP_ENTRY') {
-          throw new BadRequestException('Email address is already taken.');
+          throw new ConflictException('Email address is already taken.');
         }
       }
-      throw new InternalServerErrorException('Failed to register user to the database.');
+      throw new InternalServerErrorException('Failed to register user to the database.', {
+        cause: error,
+      });
     }
   }
 
