@@ -29,6 +29,7 @@ describe('AdministratorService', () => {
       findOne: jest.fn(),
       find: jest.fn(),
       remove: jest.fn(),
+      create: jest.fn().mockImplementation((dto) => dto),
     });
 
     const module: TestingModule = await Test.createTestingModule({

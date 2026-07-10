@@ -20,9 +20,12 @@ export class AdministratorService {
   ) {}
 
   async addAdministrator(data: AddAdministratorDto): Promise<Administrator> {
-    const admin = new Administrator();
-    admin.username = data.username;
-    admin.passwordHash = await CryptoUtil.hashPassword(data.password);
+    const hashedPassword = await CryptoUtil.hashPassword(data.password);
+
+    const admin = this.administratorRepository.create({
+      username: data.username,
+      passwordHash: hashedPassword,
+    });
 
     try {
       return await this.administratorRepository.save(admin);
@@ -33,7 +36,9 @@ export class AdministratorService {
           throw new ConflictException('Administrator with that username already exists');
         }
       }
-      throw new InternalServerErrorException('Failed to add administrator to the database.');
+      throw new InternalServerErrorException('Failed to add administrator to the database.', {
+        cause: error,
+      });
     }
   }
 
@@ -68,7 +73,7 @@ export class AdministratorService {
           throw new ConflictException('This username is already taken');
         }
       }
-      throw new InternalServerErrorException('Failed to update administrator.');
+      throw new InternalServerErrorException('Failed to update administrator.', { cause: error });
     }
   }
 
