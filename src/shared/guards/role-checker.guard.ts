@@ -22,14 +22,16 @@ export class RoleCheckerGuard implements CanActivate {
     }
 
     const req: Request = context.switchToHttp().getRequest();
-
     const user = req.user as AuthenticatedUser | undefined;
 
     if (!user || !user.role) {
       return false;
     }
 
-    const allow_to_roles = this.reflector.get<Role[]>(ROLES_KEY, context.getHandler());
+    const allow_to_roles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     if (!allow_to_roles) {
       return true;
