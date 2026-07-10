@@ -5,7 +5,6 @@ import {
   Param,
   Post,
   Put,
-  Query,
   ParseIntPipe,
   UseGuards,
   HttpCode,
@@ -21,6 +20,8 @@ import { Public } from 'src/shared/decorators/public.decorator';
 import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/enums/role.enum';
 import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
+
+import { FindWorkerDto } from './dto/find-worker.dto';
 
 @Controller('workers')
 @UseGuards(RoleCheckerGuard)
@@ -44,13 +45,13 @@ export class WorkerController {
   }
 
   @Public()
-  @Get('search/:userId')
+  @Post('search/:userId')
+  @HttpCode(HttpStatus.OK)
   async findWorker(
     @Param('userId', ParseIntPipe) userId: number,
-    @Query('name') name: string,
-    @Query('password') password: string,
+    @Body() data: FindWorkerDto,
   ): Promise<Worker> {
-    return await this.workerService.findWorker(name, password, userId);
+    return await this.workerService.findWorker(data.name, data.password, userId);
   }
 
   @Get(':id')

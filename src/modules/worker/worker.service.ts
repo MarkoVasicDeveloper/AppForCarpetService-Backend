@@ -36,7 +36,9 @@ export class WorkerService {
           throw new ConflictException('The worker name is already busy!');
         }
       }
-      throw new InternalServerErrorException('Failed to add worker to the database.');
+      throw new InternalServerErrorException('Failed to add worker to the database.', {
+        cause: error,
+      });
     }
   }
 
