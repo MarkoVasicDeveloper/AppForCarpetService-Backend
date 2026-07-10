@@ -14,7 +14,7 @@
     "skipLibCheck": true,
     "strictPropertyInitialization": true,
     "strictNullChecks": true,
-    "types": ["node"],
+    "types": ["node", "jest"],
     "paths": {
       "src/*": ["src/*"]
     }
