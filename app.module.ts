@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdministratorModule } from 'src/modules/administrator/administrator.module';
 import { AnalysisModule } from 'src/modules/analysis/analysis.module';
@@ -9,7 +10,7 @@ import { CarpetReceptionModule } from 'src/modules/carpet-receptions/carpet-rece
 import { ClientsModule } from 'src/modules/clients/clients.module';
 import { CostModule } from 'src/modules/cost/cost.module';
 import { IncomeModule } from 'src/modules/income/income.module';
-import { MailerModule } from 'src/modules/mailer/mailer.module';
+import { NotificationModule } from 'src/modules/notification/notification.module';
 import { SchedulingCarpetModule } from 'src/modules/scheduling-carpet/scheduling-carpet.module';
 import { SubscriberModule } from 'src/modules/subscribers/subscriber.module';
 import { SupplierModule } from 'src/modules/suppliers/supplier.module';
@@ -32,6 +33,8 @@ import { WorkerModule } from 'src/modules/worker/worker.module';
       logging: true,
       autoLoadEntities: true,
     }),
+    EventEmitterModule.forRoot(),
+    NotificationModule,
     ClientsModule,
     CarpetModule,
     CarpetReceptionModule,
@@ -43,7 +46,6 @@ import { WorkerModule } from 'src/modules/worker/worker.module';
     SchedulingCarpetModule,
     SubscriberModule,
     CostModule,
-    MailerModule,
     AnalysisModule,
     AuthModule,
   ],

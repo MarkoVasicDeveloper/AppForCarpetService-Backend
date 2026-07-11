@@ -3,15 +3,12 @@ import {
   NotFoundException,
   InternalServerErrorException,
   Logger,
-  Inject,
-  forwardRef,
   ConflictException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CryptoUtil } from 'src/shared/utils/crypto.util';
 import { Repository, QueryFailedError } from 'typeorm';
-
-import { UserMailerService } from '../mailer/mailer.service';
 
 import { AddUserDto } from './dto/add-user.dto';
 import { EditUserDto } from './dto/edit-user.dto';
@@ -24,8 +21,7 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @Inject(forwardRef(() => UserMailerService))
-    private readonly mailerService: UserMailerService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async addUser(data: AddUserDto): Promise<User> {
@@ -44,7 +40,10 @@ export class UserService {
     try {
       const savedUser = await this.userRepository.save(user);
 
-      await this.runBackgroundMailJob(savedUser.email);
+      this.eventEmitter.emit('user.registered', {
+        email: savedUser.email,
+        name: `${savedUser.name} ${savedUser.surname}`,
+      });
 
       return savedUser;
     } catch (error: unknown) {
@@ -94,13 +93,5 @@ export class UserService {
       throw new NotFoundException(`User with ID ${userId} not found.`);
     }
     return user;
-  }
-
-  private async runBackgroundMailJob(email: string): Promise<void> {
-    try {
-      await this.mailerService.sendWelcomeEmail(email);
-    } catch (mailError) {
-      this.logger.error(`Failed to send welcome email to ${email}`, mailError as string);
-    }
   }
 }
