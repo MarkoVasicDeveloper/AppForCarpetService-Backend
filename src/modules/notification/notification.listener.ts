@@ -8,9 +8,19 @@ export class NotificationListener {
   constructor(private readonly notificationService: NotificationService) {}
 
   @OnEvent('user.registered')
-  async handleUserRegistered(payload: { email: string; name: string }) {
-    await this.notificationService.sendEmail(payload.email, 'Welcome to Washer App!', 'welcome', {
-      name: payload.name,
-    });
+  async handleUserRegistered(payload: {
+    email: string;
+    name: string;
+    token: string;
+  }): Promise<void> {
+    await this.notificationService.sendEmail(
+      payload.email,
+      'Verify Your Washer App Account',
+      'welcome',
+      {
+        name: payload.name,
+        token: payload.token,
+      },
+    );
   }
 }

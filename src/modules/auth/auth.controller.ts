@@ -21,10 +21,14 @@ import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RefreshTokenService } from './refresh-token.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly refreshTokenService: RefreshTokenService,
+  ) {}
 
   @Public()
   @Post('login')
@@ -45,6 +49,7 @@ export class AuthController {
   @Roles(Role.ADMINISTRATOR)
   @HttpCode(HttpStatus.OK)
   async invalidateAllUserTokens(@Param('userId', ParseIntPipe) userId: number): Promise<void> {
-    return await this.authService.invalidateAllUserTokens(userId);
+    await this.refreshTokenService.invalidateAllForEntity(Role.USER, userId);
+    await this.refreshTokenService.invalidateWorkerTokensByUserId(userId);
   }
 }

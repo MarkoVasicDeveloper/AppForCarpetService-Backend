@@ -5,18 +5,25 @@ import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
+import {
+  IAuthenticatableService,
+  IAuthProfile,
+} from 'src/modules/auth/types/authenticatable.interface';
 import { AddWorkerDto } from 'src/modules/worker/dto/add-worker.dto';
 import { EditWorkerDto } from 'src/modules/worker/dto/edit-worker.dto';
 import { Worker } from 'src/modules/worker/worker.entity';
+import { Role } from 'src/shared/enums/role.enum';
 import { CryptoUtil } from 'src/shared/utils/crypto.util';
 import { Repository, QueryFailedError } from 'typeorm';
 
 @Injectable()
-export class WorkerService {
+export class WorkerService implements IAuthenticatableService {
   constructor(
     @InjectRepository(Worker)
     private readonly workerRepository: Repository<Worker>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async addWorker(data: AddWorkerDto, userId: number): Promise<Worker> {
@@ -64,6 +71,8 @@ export class WorkerService {
       worker.password = await CryptoUtil.hashPassword(data.newPassword);
     }
 
+    this.eventEmitter.emit('worker.credentials.changed', { id });
+
     return await this.workerRepository.save(worker);
   }
 
@@ -108,7 +117,20 @@ export class WorkerService {
         'Worker is not found or you do not have permission to delete them.',
       );
     }
-
+    this.eventEmitter.emit('worker.deleted', { id });
     await this.workerRepository.remove(worker);
+  }
+
+  async authenticateIdentity(identity: string): Promise<IAuthProfile | null> {
+    const worker = await this.getWorkerByName(identity);
+    if (!worker) return null;
+
+    return {
+      id: worker.workerId,
+      identity: worker.name,
+      passwordHash: worker.password,
+      role: Role.WORKER,
+      userId: worker.userId,
+    };
   }
 }

@@ -5,18 +5,25 @@ import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Administrator } from 'src/modules/administrator/administrator.entity';
 import { AddAdministratorDto } from 'src/modules/administrator/dto/add-administrator.dto';
 import { EditAdministratorDto } from 'src/modules/administrator/dto/edit-administrator.dto';
+import {
+  IAuthenticatableService,
+  IAuthProfile,
+} from 'src/modules/auth/types/authenticatable.interface';
+import { Role } from 'src/shared/enums/role.enum';
 import { CryptoUtil } from 'src/shared/utils/crypto.util';
 import { Repository, QueryFailedError } from 'typeorm';
 
 @Injectable()
-export class AdministratorService {
+export class AdministratorService implements IAuthenticatableService {
   constructor(
     @InjectRepository(Administrator)
     private readonly administratorRepository: Repository<Administrator>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async addAdministrator(data: AddAdministratorDto): Promise<Administrator> {
@@ -65,7 +72,13 @@ export class AdministratorService {
     }
 
     try {
-      return await this.administratorRepository.save(admin);
+      const updatedAdmin = await this.administratorRepository.save(admin);
+
+      if (data.username || data.newPassword) {
+        this.eventEmitter.emit('administrator.credentials.changed', { adminId: id });
+      }
+
+      return updatedAdmin;
     } catch (error) {
       if (error instanceof QueryFailedError) {
         const dbError = error.driverError as { errno?: number; code?: string };
@@ -85,6 +98,8 @@ export class AdministratorService {
     if (!admin) {
       throw new NotFoundException('Administrator not found');
     }
+
+    this.eventEmitter.emit('administrator.deleted', { adminId: id });
 
     await this.administratorRepository.remove(admin);
   }
@@ -109,5 +124,17 @@ export class AdministratorService {
     }
 
     return admin;
+  }
+
+  async authenticateIdentity(identity: string): Promise<IAuthProfile | null> {
+    const admin = await this.getAdminByUsername({ username: identity });
+    if (!admin) return null;
+
+    return {
+      id: admin.administratorId,
+      identity: admin.username,
+      passwordHash: admin.passwordHash,
+      role: Role.ADMINISTRATOR,
+    };
   }
 }

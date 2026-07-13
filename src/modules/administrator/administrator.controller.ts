@@ -15,7 +15,6 @@ import {
 import { AdministratorService } from 'src/modules/administrator/administrator.service';
 import { AddAdministratorDto } from 'src/modules/administrator/dto/add-administrator.dto';
 import { EditAdministratorDto } from 'src/modules/administrator/dto/edit-administrator.dto';
-import { AuthService } from 'src/modules/auth/auth.service';
 import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/enums/role.enum';
 import { RoleCheckerGuard } from 'src/shared/guards/role-checker.guard';
@@ -26,10 +25,7 @@ import { Administrator } from './administrator.entity';
 @UseGuards(RoleCheckerGuard)
 @Roles(Role.ADMINISTRATOR)
 export class AdministratorController {
-  constructor(
-    private readonly administratorService: AdministratorService,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly administratorService: AdministratorService) {}
 
   @Post()
   async addAdministrator(@Body() data: AddAdministratorDto): Promise<Administrator> {
@@ -43,17 +39,12 @@ export class AdministratorController {
   ): Promise<Administrator> {
     const updatedAdmin = await this.administratorService.editAdmin(id, data);
 
-    if (data.username || data.newPassword) {
-      await this.authService.invalidateAllAdminTokens(id);
-    }
-
     return updatedAdmin;
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteAdmin(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    await this.authService.invalidateAllAdminTokens(id);
     await this.administratorService.deleteAdmin(id);
   }
 

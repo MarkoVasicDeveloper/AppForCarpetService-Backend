@@ -10,6 +10,8 @@ import {
   UseGuards,
   ParseIntPipe,
   ForbiddenException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { CurrentUser } from 'src/shared/decorators/current-user.decorators';
 import { Public } from 'src/shared/decorators/public.decorator';
@@ -78,5 +80,11 @@ export class UserController {
   @Roles(Role.ADMINISTRATOR)
   async deleteUserByAdministrator(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.userService.deleteUser(id);
+  }
+
+  @Post('verify')
+  @HttpCode(HttpStatus.OK)
+  async verifyAccount(@Query('token') token: string) {
+    return await this.userService.verifyAccount(token);
   }
 }

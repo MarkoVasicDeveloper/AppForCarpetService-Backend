@@ -30,6 +30,12 @@ export class User {
   @Column('varchar', { name: 'password_hash', length: 255 })
   passwordHash!: string;
 
+  @Column({ type: 'boolean', default: false, name: 'is_verified' })
+  isVerified!: boolean;
+
+  @Column({ type: 'varchar', nullable: true, name: 'verification_token' })
+  verificationToken!: string | null;
+
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshTokens!: RefreshToken[];
 
