@@ -10,11 +10,11 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Role } from 'src/shared/enums/role.enum';
 import {
   IAuthenticatableService,
   IAuthProfile,
 } from 'src/modules/auth/types/authenticatable.interface';
+import { Role } from 'src/shared/enums/role.enum';
 import { CryptoUtil } from 'src/shared/utils/crypto.util';
 import { Repository, QueryFailedError } from 'typeorm';
 

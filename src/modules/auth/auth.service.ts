@@ -99,17 +99,19 @@ export class AuthService {
   }
 
   private verifyTokenSignature(token: string, ip: string, userAgent: string): JwtPayload {
+    let payload: JwtPayload;
+
     try {
       const secret = this.configService.get<string>('JWT_SECRET') || 'DEFAULT_SECRET_PRODUKCIJA';
-      const payload = this.jwtService.verify<JwtPayload>(token, { secret });
-
-      if (ip !== payload.ipAddress || userAgent !== payload.userAgent) {
-        throw new UnauthorizedException('Security violation: IP or User-Agent mismatch');
-      }
-
-      return payload;
+      payload = this.jwtService.verify<JwtPayload>(token, { secret });
     } catch (error) {
       throw new UnauthorizedException('Invalid token signature');
     }
+
+    if (ip !== payload.ipAddress || userAgent !== payload.userAgent) {
+      throw new UnauthorizedException('Security violation: IP or User-Agent mismatch');
+    }
+
+    return payload;
   }
 }

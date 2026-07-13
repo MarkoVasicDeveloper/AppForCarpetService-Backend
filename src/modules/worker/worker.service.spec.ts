@@ -4,10 +4,12 @@ import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, QueryFailedError, ObjectLiteral } from 'typeorm';
 
+import { Role } from '../../shared/enums/role.enum';
 import { CryptoUtil } from '../../shared/utils/crypto.util';
 
 import { AddWorkerDto } from './dto/add-worker.dto';
@@ -22,6 +24,7 @@ type MockRepository<T extends ObjectLiteral> = {
 describe('WorkerService', () => {
   let service: WorkerService;
   let workerRepository: MockRepository<Worker>;
+  let eventEmitter: EventEmitter2;
 
   beforeEach(async () => {
     const mockRepositoryFactory = (): MockRepository<object> => ({
@@ -38,11 +41,22 @@ describe('WorkerService', () => {
           provide: getRepositoryToken(Worker),
           useFactory: mockRepositoryFactory,
         },
+        {
+          provide: EventEmitter2,
+          useValue: {
+            emit: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<WorkerService>(WorkerService);
     workerRepository = module.get<MockRepository<Worker>>(getRepositoryToken(Worker));
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('should be defined', () => {
@@ -57,7 +71,6 @@ describe('WorkerService', () => {
       jest.spyOn(CryptoUtil, 'hashPassword').mockResolvedValue('hashed_password');
 
       workerRepository.create!.mockImplementation((data) => ({ ...data }));
-
       workerRepository.save!.mockImplementation(
         async (w) => ({ workerId: 1, ...(w as object) }) as Worker,
       );
@@ -121,7 +134,7 @@ describe('WorkerService', () => {
       expect(CryptoUtil.comparePassword).toHaveBeenCalledWith('wrong_password', 'hashed_password');
     });
 
-    it('should successfully update worker details and hash new password if provided', async () => {
+    it('should successfully update worker details, hash new password and emit event', async () => {
       const existingWorker = {
         workerId: id,
         userId,
@@ -148,6 +161,7 @@ describe('WorkerService', () => {
       expect(CryptoUtil.hashPassword).toHaveBeenCalledWith('new_password_123');
       expect(result.name).toBe('Zika Novi');
       expect(result.password).toBe('new_hashed_password');
+      expect(eventEmitter.emit).toHaveBeenCalledWith('worker.credentials.changed', { id });
     });
   });
 
@@ -186,14 +200,80 @@ describe('WorkerService', () => {
     });
   });
 
+  describe('findWorkerById', () => {
+    const id = 1;
+    const userId = 1;
+
+    it('should successfully return a worker if found by id', async () => {
+      const mockWorker = { workerId: id, userId, name: 'Zika' } as Worker;
+      workerRepository.findOne!.mockResolvedValue(mockWorker);
+
+      const result = await service.findWorkerById(id, userId);
+      expect(workerRepository.findOne).toHaveBeenCalledWith({ where: { workerId: id, userId } });
+      expect(result).toEqual(mockWorker);
+    });
+
+    it('should throw NotFoundException if worker by id does not exist', async () => {
+      workerRepository.findOne!.mockResolvedValue(null);
+      await expect(service.findWorkerById(id, userId)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getWorkerByName', () => {
+    it('should return worker or null when searching by name', async () => {
+      const mockWorker = { name: 'Zika' } as Worker;
+      workerRepository.findOne!.mockResolvedValue(mockWorker);
+
+      const result = await service.getWorkerByName('Zika');
+      expect(workerRepository.findOne).toHaveBeenCalledWith({ where: { name: 'Zika' } });
+      expect(result).toEqual(mockWorker);
+    });
+  });
+
   describe('deleteWorker', () => {
-    it('should successfully remove worker if found', async () => {
+    it('should successfully remove worker if found and emit event', async () => {
       const mockWorker = { workerId: 1, userId: 1 } as Worker;
       workerRepository.findOne!.mockResolvedValue(mockWorker);
       workerRepository.remove!.mockResolvedValue(mockWorker);
 
       await expect(service.deleteWorker(1, 1)).resolves.not.toThrow();
+      expect(eventEmitter.emit).toHaveBeenCalledWith('worker.deleted', { id: 1 });
       expect(workerRepository.remove).toHaveBeenCalledWith(mockWorker);
+    });
+
+    it('should throw NotFoundException if worker to delete is not found', async () => {
+      workerRepository.findOne!.mockResolvedValue(null);
+      await expect(service.deleteWorker(1, 1)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('authenticateIdentity', () => {
+    it('should return IAuthProfile mapping if worker exists', async () => {
+      const mockWorker = {
+        workerId: 10,
+        name: 'Zika',
+        password: 'hashed_password',
+        userId: 2,
+      } as Worker;
+
+      workerRepository.findOne!.mockResolvedValue(mockWorker);
+
+      const result = await service.authenticateIdentity('Zika');
+
+      expect(result).toEqual({
+        id: 10,
+        identity: 'Zika',
+        passwordHash: 'hashed_password',
+        role: Role.WORKER,
+        userId: 2,
+      });
+    });
+
+    it('should return null if worker does not exist during authentication', async () => {
+      workerRepository.findOne!.mockResolvedValue(null);
+
+      const result = await service.authenticateIdentity('Nepostojeci');
+      expect(result).toBeNull();
     });
   });
 });
