@@ -102,7 +102,7 @@ export class AuthService {
     let payload: JwtPayload;
 
     try {
-      const secret = this.configService.get<string>('JWT_SECRET') || 'DEFAULT_SECRET_PRODUKCIJA';
+      const secret = this.configService.get<string>('JWT_SECRET') || 'DEFAULT_SECRET_PRODUCTION';
       payload = this.jwtService.verify<JwtPayload>(token, { secret });
     } catch (error) {
       throw new UnauthorizedException('Invalid token signature');
